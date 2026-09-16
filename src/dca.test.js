@@ -1,0 +1,116 @@
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { buildScheduleIndex, evaluate, findBestWorst } = require("./dca.js");
+
+// Небольшой синтетический диапазон: 2010-08-17 .. 2010-12-31 (137 дней),
+// с ценой 0.07 первые дни (реальные ранние цены) и намеренно резким ростом
+// в конце, чтобы было видно, что арифметика на больших количествах BTC
+// не ломается.
+function buildFakePriceData() {
+  const start = "2010-08-17";
+  const days = 137; // до 2010-12-31 включительно
+  const prices = [];
+  for (let i = 0; i < days; i++) {
+    prices.push(i < 100 ? 0.07 : 0.07 + (i - 99) * 0.05); // растёт после 100-го дня
+  }
+  const { indexToDate } = require("./date-utils.js");
+  const asOf = indexToDate(start, days - 1);
+  return { start, asOf, tz: "UTC", prices };
+}
+
+const priceData = buildFakePriceData();
+const index = buildScheduleIndex(priceData);
+
+test("дата раньше начала истории — явная ошибка", () => {
+  const r = evaluate({ amount: 5, periodicity: "daily", startDate: "2010-08-16" }, priceData, index);
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "DATE_BEFORE_HISTORY");
+});
+
+test("дата позже последней доступной — явная ошибка", () => {
+  const r = evaluate({ amount: 5, periodicity: "daily", startDate: "2011-01-01" }, priceData, index);
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "DATE_NOT_AVAILABLE");
+});
+
+test("ноль/отрицательная сумма — явная ошибка", () => {
+  assert.equal(evaluate({ amount: 0, periodicity: "daily", startDate: priceData.start }, priceData, index).error.code, "AMOUNT_NOT_POSITIVE");
+  assert.equal(evaluate({ amount: -5, periodicity: "daily", startDate: priceData.start }, priceData, index).error.code, "AMOUNT_NOT_POSITIVE");
+});
+
+test("нечисловая сумма — явная ошибка", () => {
+  const r = evaluate({ amount: "5", periodicity: "daily", startDate: priceData.start }, priceData, index);
+  assert.equal(r.error.code, "INVALID_AMOUNT");
+});
+
+test("слишком большая сумма — явная ошибка", () => {
+  const r = evaluate({ amount: 1e10, periodicity: "daily", startDate: priceData.start }, priceData, index);
+  assert.equal(r.error.code, "AMOUNT_TOO_LARGE");
+});
+
+test("неверная периодичность — явная ошибка", () => {
+  const r = evaluate({ amount: 5, periodicity: "yearly", startDate: priceData.start }, priceData, index);
+  assert.equal(r.error.code, "INVALID_PERIODICITY");
+});
+
+test("ежедневная покупка: количество и сумма трат совпадают с числом дней", () => {
+  const r = evaluate({ amount: 5, periodicity: "daily", startDate: priceData.start }, priceData, index);
+  assert.equal(r.ok, true);
+  assert.equal(r.purchases, priceData.prices.length);
+  assert.equal(r.totalSpent, 5 * priceData.prices.length);
+});
+
+test("еженедельная покупка отсчитывается от дня недели даты начала", () => {
+  // 2010-08-17 — вторник. Покупки должны быть на индексах 0,7,14,...
+  const r = evaluate({ amount: 10, periodicity: "weekly", startDate: "2010-08-17" }, priceData, index);
+  assert.equal(r.ok, true);
+  const expectedCount = Math.ceil(priceData.prices.length / 7);
+  assert.equal(r.purchases, expectedCount);
+});
+
+test("месячная покупка 31 числа переносится на последний день короткого месяца", () => {
+  // старт 2010-08-31 (последний день августа) — далее должно быть
+  // 2010-09-30 (в сентябре нет 31-го), 2010-10-31, 2010-11-30, 2010-12-31
+  const r31 = evaluate({ amount: 1, periodicity: "monthly", startDate: "2010-08-31" }, priceData, index);
+  assert.equal(r31.ok, true);
+  assert.equal(r31.purchases, 5); // авг, сен, окт, ноя, дек
+
+  // проверяем это же руками через индексы: сумма 1/price на датах
+  // 08-31, 09-30, 10-31, 11-30, 12-31
+  const { daysBetween } = require("./date-utils.js");
+  const dates = ["2010-08-31", "2010-09-30", "2010-10-31", "2010-11-30", "2010-12-31"];
+  let expectedSumInv = 0;
+  for (const d of dates) expectedSumInv += 1 / priceData.prices[daysBetween(priceData.start, d)];
+  assert.ok(Math.abs(r31.btcAccumulated - expectedSumInv) < 1e-9);
+});
+
+test("месячная покупка 1 числа — по одной покупке в каждый месяц, без переносов", () => {
+  const r1 = evaluate({ amount: 1, periodicity: "monthly", startDate: "2010-09-01" }, priceData, index);
+  assert.equal(r1.ok, true);
+  assert.equal(r1.purchases, 4); // сен, окт, ноя, дек
+});
+
+test("огромное количество BTC на ранних дешёвых ценах — конечное число, не Infinity/NaN", () => {
+  const r = evaluate({ amount: 1000, periodicity: "daily", startDate: priceData.start }, priceData, index);
+  assert.equal(r.ok, true);
+  assert.ok(Number.isFinite(r.btcAccumulated));
+  assert.ok(Number.isFinite(r.valueNow));
+  assert.ok(Number.isFinite(r.profitPct));
+  assert.ok(r.btcAccumulated > 100000); // цена 0.07 => по 1000/0.07 ≈ 14286 BTC в день первые 100 дней
+});
+
+test("findBestWorst: лучший момент не хуже худшего, оба реальные даты из диапазона", () => {
+  const r = findBestWorst("daily", priceData, index);
+  assert.equal(r.ok, true);
+  assert.ok(r.best.profitPct >= r.worst.profitPct);
+  assert.ok(r.best.startDate >= priceData.start && r.best.startDate <= priceData.asOf);
+  assert.ok(r.worst.startDate >= priceData.start && r.worst.startDate <= priceData.asOf);
+});
+
+test("findBestWorst с неверной периодичностью — явная ошибка", () => {
+  const r = findBestWorst("yearly", priceData, index);
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "INVALID_PERIODICITY");
+});
