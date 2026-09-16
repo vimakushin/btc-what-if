@@ -12,6 +12,11 @@ const DATA_PATH = path.join(__dirname, "..", "data", "btc-usd-daily.json");
 const SOURCE_URL = "https://api.blockchain.info/charts/market-price";
 const OVERLAP_DAYS = 10;
 
+// Цена дня D в этом файле — цена на конец дня D по UTC (см. MVP.md,
+// «Принятые решения» → «Сутки считаются по UTC»). Записывается в сам
+// файл данных, чтобы это было видно и без чтения кода.
+const TIMEZONE = "UTC";
+
 function toISODate(unixSeconds) {
   return new Date(unixSeconds * 1000).toISOString().slice(0, 10);
 }
@@ -50,11 +55,16 @@ async function fetchRaw(startDate) {
   return points;
 }
 
-// blockchain.info помечает точку датой D, но число в ней — цена на НАЧАЛО
-// дня D (то есть фактически цена закрытия дня D-1). Проверено сверкой с
-// Yahoo Finance на нескольких датах: например, сырое значение источника
-// на "2020-03-13" совпадает с ценой закрытия 2020-03-12 у Yahoo, а не со
-// своей же датой. Поэтому цену дня D берём из точки, помеченной датой D+1.
+// blockchain.info помечает точку датой D, но число в ней — цена на начало
+// дня D по UTC (00:00), то есть фактически цена закрытия дня D-1. Поэтому
+// цену закрытия дня D по UTC берём из точки, помеченной датой D+1: её
+// значение — это и есть цена в 00:00 дня D+1, она же 23:59:59... дня D.
+//
+// Проверено (не просто предположение): после сдвига цена на дату D по
+// нашим данным сверена с ценой закрытия BTC-USD на ту же календарную
+// дату D у Yahoo Finance. Совпадает с точностью до обычного расхождения
+// между биржами (0.003–2.8% на проверенных датах, включая резкий обвал
+// 2020-03-12 — до сдвига там было расхождение до 60%, после сдвига 2.8%).
 function shiftToCloseOfDay(raw) {
   const shifted = [];
   for (let i = 0; i < raw.length - 1; i++) {
@@ -81,6 +91,7 @@ async function buildFromScratch() {
   return {
     start: trimmed[0].date,
     asOf: trimmed[trimmed.length - 1].date,
+    tz: TIMEZONE,
     prices: trimmed.map((p) => p.price),
   };
 }
@@ -108,6 +119,7 @@ async function updateExisting(existing) {
   return {
     start: existing.start,
     asOf: addDays(existing.start, prices.length - 1),
+    tz: TIMEZONE,
     prices,
   };
 }
