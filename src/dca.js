@@ -64,7 +64,13 @@ function findExact(sortedArr, value) {
 function buildScheduleIndex(priceData) {
   const n = priceData.prices.length;
   const invPrices = new Float64Array(n);
-  for (let i = 0; i < n; i++) invPrices[i] = 1 / priceData.prices[i];
+  for (let i = 0; i < n; i++) {
+    const price = priceData.prices[i];
+    if (!isFiniteNumber(price) || price <= 0) {
+      throw new Error(`Файл цен повреждён: некорректная цена на ${indexToDate(priceData.start, i)} (${price}).`);
+    }
+    invPrices[i] = 1 / price;
+  }
 
   const dailyPrefix = new Float64Array(n + 1);
   for (let i = 0; i < n; i++) dailyPrefix[i + 1] = dailyPrefix[i] + invPrices[i];

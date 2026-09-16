@@ -114,3 +114,59 @@ test("findBestWorst с неверной периодичностью — явн�
   assert.equal(r.ok, false);
   assert.equal(r.error.code, "INVALID_PERIODICITY");
 });
+
+test("дата начала равна последнему дню файла — результат ровно 0%", () => {
+  const r = evaluate({ amount: 5, periodicity: "daily", startDate: priceData.asOf }, priceData, index);
+  assert.equal(r.ok, true);
+  assert.equal(r.purchases, 1);
+  assert.ok(Math.abs(r.profitPct) < 1e-9);
+});
+
+test("buildScheduleIndex бросает понятную ошибку с датой при нулевой/отрицательной/NaN цене в файле", () => {
+  const zero = { start: "2010-08-17", asOf: "2010-08-19", tz: "UTC", prices: [0.07, 0, 0.08] };
+  assert.throws(() => buildScheduleIndex(zero), /2010-08-18/);
+
+  const negative = { start: "2010-08-17", asOf: "2010-08-19", tz: "UTC", prices: [0.07, 0.07, -1] };
+  assert.throws(() => buildScheduleIndex(negative), /2010-08-19/);
+
+  const notANumber = { start: "2010-08-17", asOf: "2010-08-19", tz: "UTC", prices: [NaN, 0.07, 0.08] };
+  assert.throws(() => buildScheduleIndex(notANumber), /2010-08-17/);
+});
+
+// Отдельный синтетический диапазон для проверки переноса даты именно
+// в феврале — единственном месяце, где может не быть даже 29/30 числа.
+function buildFebPriceData(start, days) {
+  const prices = [];
+  for (let i = 0; i < days; i++) prices.push(0.1 + i * 0.001);
+  const { indexToDate } = require("./date-utils.js");
+  const asOf = indexToDate(start, days - 1);
+  return { start, asOf, tz: "UTC", prices };
+}
+
+test("месячная покупка 31 числа переносится на 28 февраля в невисокосном году", () => {
+  const febData = buildFebPriceData("2011-01-31", 100); // 2011 — невисокосный
+  const febIndex = buildScheduleIndex(febData);
+  const r = evaluate({ amount: 1, periodicity: "monthly", startDate: "2011-01-31" }, febData, febIndex);
+  assert.equal(r.ok, true);
+  assert.equal(r.purchases, 4); // янв, фев (28), мар, апр
+
+  const { daysBetween } = require("./date-utils.js");
+  const dates = ["2011-01-31", "2011-02-28", "2011-03-31", "2011-04-30"];
+  let expectedSumInv = 0;
+  for (const d of dates) expectedSumInv += 1 / febData.prices[daysBetween(febData.start, d)];
+  assert.ok(Math.abs(r.btcAccumulated - expectedSumInv) < 1e-9);
+});
+
+test("месячная покупка 31 числа переносится на 29 февраля в високосном году", () => {
+  const febData = buildFebPriceData("2012-01-31", 100); // 2012 — високосный
+  const febIndex = buildScheduleIndex(febData);
+  const r = evaluate({ amount: 1, periodicity: "monthly", startDate: "2012-01-31" }, febData, febIndex);
+  assert.equal(r.ok, true);
+  assert.equal(r.purchases, 4); // янв, фев (29), мар, апр
+
+  const { daysBetween } = require("./date-utils.js");
+  const dates = ["2012-01-31", "2012-02-29", "2012-03-31", "2012-04-30"];
+  let expectedSumInv = 0;
+  for (const d of dates) expectedSumInv += 1 / febData.prices[daysBetween(febData.start, d)];
+  assert.ok(Math.abs(r.btcAccumulated - expectedSumInv) < 1e-9);
+});
