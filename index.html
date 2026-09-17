@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>А если бы я купил биткоин?</title>
+  <meta name="description" content="Считает, во что превратились бы твои привычные траты в биткоине — и честно показывает, что при другой дате начала это могло быть и убытком." />
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <header class="header">
+    <h1>А если бы я купил биткоин?</h1>
+    <p class="lead">Выбери привычную трату и подвигай дату начала — увидишь и красивую цифру, и то, чего она стоила.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-label="Что покупаем">
+      <h2 class="card-title">Что откладываем в биткоин</h2>
+      <div class="presets" id="presets">
+        <button type="button" class="preset" data-preset="coffee">Кофе<span class="preset-hint">$5 в день</span></button>
+        <button type="button" class="preset" data-preset="cigarettes">Сигареты<span class="preset-hint">$8 в день</span></button>
+        <button type="button" class="preset" data-preset="meals">Обеды<span class="preset-hint">$12 в день</span></button>
+        <button type="button" class="preset" data-preset="subscription">Подписка<span class="preset-hint">$15 в месяц</span></button>
+      </div>
+      <div class="custom-input">
+        <label class="field">
+          <span>Своя сумма, $</span>
+          <input type="number" id="custom-amount" min="0" step="0.01" inputmode="decimal" />
+        </label>
+        <label class="field">
+          <span>Как часто</span>
+          <select id="custom-periodicity">
+            <option value="daily">каждый день</option>
+            <option value="weekly">раз в неделю</option>
+            <option value="monthly">раз в месяц</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card card-slider" aria-label="Дата начала">
+      <h2 class="card-title">С какого дня считаем</h2>
+      <input type="range" id="start-slider" class="slider" min="0" max="0" value="0" disabled aria-label="Дата начала покупок" />
+      <p class="slider-date" id="start-date-label">—</p>
+    </section>
+
+    <section class="card" aria-label="Кривая результата по всем датам начала">
+      <div class="curve-wrap">
+        <svg id="curve-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+          <line id="curve-zero" x1="0" y1="150" x2="1000" y2="150" class="curve-zero-line" />
+          <path id="curve-path" class="curve-path" d="" />
+          <circle id="curve-marker" class="curve-marker" cx="0" cy="150" r="6" />
+        </svg>
+        <div class="curve-axis" id="curve-axis" aria-hidden="true"></div>
+        <p class="curve-caption">Форма кривой, не проценты напрямую — иначе обвал последних лет спрятался бы за скачком 2010 года. Точные числа — у ползунка и в результате ниже.</p>
+      </div>
+      <p class="extreme" id="best-moment">Лучший момент: —</p>
+      <p class="extreme" id="worst-moment">Худший момент: —</p>
+    </section>
+
+    <section class="card" aria-label="Результат">
+      <p class="result-line">
+        <span class="result-label">Потрачено</span>
+        <span class="result-money" id="result-spent">—</span>
+      </p>
+      <p class="result-line">
+        <span class="result-label">Стало бы</span>
+        <span class="result-money" id="result-value">—</span>
+      </p>
+      <p class="result-line result-diff">
+        <span class="result-label">Разница</span>
+        <span class="result-money" id="result-diff-usd">—</span>
+      </p>
+      <p class="result-pct" id="result-diff-pct">—</p>
+      <p class="note" id="monthly-note" hidden>Выбранное число есть не в каждом месяце — в короткие месяцы покупка сдвигается на последний день месяца.</p>
+      <p class="note">Расчёт строго по расписанию, без комиссий и налогов.</p>
+      <p class="note">Цена — среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.</p>
+    </section>
+
+    <p class="loading-note" id="loading-note">Загружаем историю цен…</p>
+  </main>
+
+  <footer class="footer">
+    <p class="note" id="as-of-note">—</p>
+  </footer>
+
+  <script src="src/date-utils.js"></script>
+  <script src="src/dca.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

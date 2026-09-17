@@ -2,7 +2,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildScheduleIndex, evaluate, findBestWorst } = require("./dca.js");
+const { buildScheduleIndex, evaluate, curve, findBestWorst } = require("./dca.js");
 
 // Небольшой синтетический диапазон: 2010-08-17 .. 2010-12-31 (137 дней),
 // с ценой 0.07 первые дни (реальные ранние цены) и намеренно резким ростом
@@ -111,6 +111,38 @@ test("findBestWorst: лучший момент не хуже худшего, о�
 
 test("findBestWorst с неверной периодичностью — явная ошибка", () => {
   const r = findBestWorst("yearly", priceData, index);
+  assert.equal(r.ok, false);
+  assert.equal(r.error.code, "INVALID_PERIODICITY");
+});
+
+test("curve: одна точка на каждый день истории, значения совпадают с evaluate()", () => {
+  const r = curve("daily", priceData, index);
+  assert.equal(r.ok, true);
+  assert.equal(r.points.length, priceData.prices.length);
+  assert.equal(r.points[0].startDate, priceData.start);
+  assert.equal(r.points[r.points.length - 1].startDate, priceData.asOf);
+
+  // Сверяем несколько точек кривой с независимым вызовом evaluate() —
+  // curve() не должна быть отдельной, потенциально разъехавшейся копией
+  // той же арифметики.
+  for (const idx of [0, 10, 50, priceData.prices.length - 1]) {
+    const point = r.points[idx];
+    const e = evaluate({ amount: 1, periodicity: "daily", startDate: point.startDate }, priceData, index);
+    assert.ok(Math.abs(point.profitPct - e.profitPct) < 1e-9);
+  }
+});
+
+test("curve и findBestWorst согласованы: экстремумы кривой совпадают с best/worst", () => {
+  const c = curve("weekly", priceData, index);
+  const bw = findBestWorst("weekly", priceData, index);
+  const maxPct = Math.max(...c.points.map((p) => p.profitPct));
+  const minPct = Math.min(...c.points.map((p) => p.profitPct));
+  assert.equal(bw.best.profitPct, maxPct);
+  assert.equal(bw.worst.profitPct, minPct);
+});
+
+test("curve с неверной периодичностью — явная ошибка", () => {
+  const r = curve("yearly", priceData, index);
   assert.equal(r.ok, false);
   assert.equal(r.error.code, "INVALID_PERIODICITY");
 });

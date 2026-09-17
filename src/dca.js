@@ -1,7 +1,7 @@
 // Регулярная покупка BTC ("кофе каждый день с такого-то года"): считает,
 // сколько потрачено, сколько биткоина накопилось и во что это превратилось
 // бы к последнему дню файла цен. Чистые функции, без файлов/сети/DOM —
-// используются и будущей страницей, и тестами.
+// используются и страницей (src/app.js), и тестами.
 //
 // Производительность: человек будет двигать ползунок даты начала и ждёт
 // мгновенного пересчёта на ~6000 днях истории. Пересчитывать сумму заново
@@ -15,13 +15,22 @@
 //     (см. clampDayOfMonth ниже про короткие месяцы).
 // После этого evaluate() для любой даты начала — это O(1): найти позицию
 // в нужном префиксном массиве и вычесть два числа, вместо пересуммирования
-// диапазона заново. Поиск лучшего/худшего момента (findBestWorst) —
-// один проход по всем ~6000 возможным датам начала, на каждой O(1)
-// операция вместо O(1) * O(n) = квадратичного перебора.
+// диапазона заново. Кривая результата и лучший/худший момент (curve(),
+// findBestWorst()) — один проход по всем ~6000 возможным датам начала,
+// на каждой O(1) операция вместо O(1) * O(n) = квадратичного перебора.
 
 "use strict";
 
-const { isValidISODate, daysBetween, indexToDate } = require("./date-utils.js");
+// Всё внутри одной функции, а не на верхнем уровне файла: страница
+// подключает date-utils.js и этот файл как два обычных <script> тега без
+// сборщика, а у них общая глобальная область видимости для let/const —
+// без обёртки их одноимённые верхнеуровневые объявления столкнутся.
+(function () {
+
+// В Node — обычный require. В браузере (страница, без сборщика) require
+// нет, а date-utils.js в этом случае уже положил себя в window.dateUtils.
+const { isValidISODate, daysBetween, indexToDate } =
+  typeof require !== "undefined" ? require("./date-utils.js") : window.dateUtils;
 
 const MAX_AMOUNT = 1e9; // $1 млрд за одну покупку — с запасом отсекает мусорный/переполняющий ввод, реальные суммы кофе/подписок на порядки меньше
 const PERIODICITIES = ["daily", "weekly", "monthly"];
@@ -210,30 +219,52 @@ function evaluate(input, priceData, scheduleIndex) {
 }
 
 /**
- * Лучший и худший день начала за всю историю для заданной периодичности.
- * Результат не зависит от суммы покупки (она входит и в трату, и в
- * стоимость BTC одним и тем же множителем и сокращается в проценте),
- * поэтому ищем один раз по проценту результата — один проход по всем
- * возможным датам начала, на каждой O(1)/O(log k) операция.
+ * Процент результата для каждой возможной даты начала за всю историю,
+ * при заданной периодичности. Результат не зависит от суммы покупки
+ * (она входит и в трату, и в стоимость BTC одним и тем же множителем
+ * и сокращается в проценте) — поэтому один проход по всем ~6000 датам
+ * начала строит сразу и график, и лучший/худший момент.
  */
-function findBestWorst(periodicity, priceData, scheduleIndex) {
+function curve(periodicity, priceData, scheduleIndex) {
   if (!PERIODICITIES.includes(periodicity)) {
     return fail("INVALID_PERIODICITY", `Периодичность должна быть одной из: ${PERIODICITIES.join(", ")}.`);
   }
   const n = scheduleIndex.n;
   const priceNow = priceData.prices[n - 1];
-  let best = null;
-  let worst = null;
+  const points = new Array(n);
 
   for (let startIdx = 0; startIdx < n; startIdx++) {
     const startISO = indexToDate(priceData.start, startIdx);
     const { sumInv, count } = computeAtIndex(startIdx, startISO, periodicity, scheduleIndex);
     const profitPct = ((sumInv * priceNow) / count - 1) * 100;
-    if (best === null || profitPct > best.profitPct) best = { startDate: startISO, profitPct };
-    if (worst === null || profitPct < worst.profitPct) worst = { startDate: startISO, profitPct };
+    points[startIdx] = { startDate: startISO, profitPct };
+  }
+
+  return { ok: true, points };
+}
+
+/**
+ * Лучший и худший день начала за всю историю для заданной периодичности.
+ */
+function findBestWorst(periodicity, priceData, scheduleIndex) {
+  const c = curve(periodicity, priceData, scheduleIndex);
+  if (!c.ok) return c;
+
+  let best = null;
+  let worst = null;
+  for (const point of c.points) {
+    if (best === null || point.profitPct > best.profitPct) best = point;
+    if (worst === null || point.profitPct < worst.profitPct) worst = point;
   }
 
   return { ok: true, best, worst };
 }
 
-module.exports = { buildScheduleIndex, evaluate, findBestWorst, MAX_AMOUNT, PERIODICITIES };
+const exported = { buildScheduleIndex, evaluate, curve, findBestWorst, MAX_AMOUNT, PERIODICITIES };
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = exported;
+} else {
+  window.dca = exported;
+}
+
+})();

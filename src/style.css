@@ -1,0 +1,250 @@
+:root {
+  --bg: #0f1115;
+  --card: #171a21;
+  --fg: #f2f3f5;
+  --muted: #9298a5;
+  --accent: #f7931a; /* цвет биткоина, единственный акцент */
+  --good: #3ecf8e;
+  --bad: #ef5b5b;
+  --border: #262b35;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px 16px 32px;
+  max-width: 640px;
+  margin-inline: auto;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+
+.lead {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 1rem;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preset {
+  flex: 1 1 calc(50% - 8px);
+  min-height: 52px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--fg);
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.preset.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+}
+
+.preset-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.custom-input {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  flex: 1 1 140px;
+}
+
+.field input,
+.field select {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 6px 10px;
+  font-size: 1rem;
+}
+
+.card-slider {
+  border-color: var(--accent);
+  padding: 20px 16px;
+}
+
+.slider {
+  width: 100%;
+  height: 44px;
+  accent-color: var(--accent);
+}
+
+.slider-date {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+
+.curve-wrap {
+  margin-bottom: 8px;
+}
+
+#curve-svg {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+
+.curve-zero-line {
+  stroke: var(--border);
+  stroke-width: 2;
+  stroke-dasharray: 6 6;
+}
+
+.curve-path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.curve-marker {
+  fill: var(--fg);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.curve-axis {
+  position: relative;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.curve-axis span {
+  position: absolute;
+  top: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.curve-caption {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 6px 0 0;
+}
+
+.extreme {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.result-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 6px 0;
+}
+
+.result-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.result-money {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Разница в деньгах — главное число на карточке: крупнее и потрат, и
+   процента ниже. CONCEPT.md прямо про это: миллион процентов ничего не
+   значит, а сумма значит — деньги должны читаться первыми. */
+.result-diff .result-money {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.result-diff .result-money.good {
+  color: var(--good);
+}
+
+.result-diff .result-money.bad {
+  color: var(--bad);
+}
+
+.result-pct {
+  text-align: right;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.result-pct.good {
+  color: var(--good);
+}
+
+.result-pct.bad {
+  color: var(--bad);
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 4px 0;
+}
+
+.loading-note {
+  text-align: center;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 8px;
+}

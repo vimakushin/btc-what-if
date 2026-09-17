@@ -3,24 +3,40 @@
 
 "use strict";
 
-function isValidISODate(s) {
-  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const ms = Date.parse(s + "T00:00:00Z");
-  if (Number.isNaN(ms)) return false;
-  // отсекаем несуществующие даты вроде 2024-02-30, которые Date.parse иногда прощает
-  return new Date(ms).toISOString().slice(0, 10) === s;
-}
+// Всё внутри одной функции, а не на верхнем уровне файла: страница
+// подключает этот файл и src/dca.js как два обычных <script> тега без
+// сборщика, а у них общая глобальная область видимости для let/const —
+// без обёртки их одноимённые верхнеуровневые объявления столкнутся
+// (ровно это и произошло при первой попытке, поймано ручным прогоном
+// в браузероподобном окружении).
+(function () {
+  function isValidISODate(s) {
+    if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const ms = Date.parse(s + "T00:00:00Z");
+    if (Number.isNaN(ms)) return false;
+    // отсекаем несуществующие даты вроде 2024-02-30, которые Date.parse иногда прощает
+    return new Date(ms).toISOString().slice(0, 10) === s;
+  }
 
-function daysBetween(fromISO, toISO) {
-  const a = Date.parse(fromISO + "T00:00:00Z");
-  const b = Date.parse(toISO + "T00:00:00Z");
-  return Math.round((b - a) / 86400000);
-}
+  function daysBetween(fromISO, toISO) {
+    const a = Date.parse(fromISO + "T00:00:00Z");
+    const b = Date.parse(toISO + "T00:00:00Z");
+    return Math.round((b - a) / 86400000);
+  }
 
-function indexToDate(startISO, offsetDays) {
-  const d = new Date(startISO + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
-}
+  function indexToDate(startISO, offsetDays) {
+    const d = new Date(startISO + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+  }
 
-module.exports = { isValidISODate, daysBetween, indexToDate };
+  // В Node (тесты, скрипты) — обычный require/module.exports. В браузере
+  // require нет, поэтому те же функции кладём в window, чтобы src/dca.js
+  // и src/app.js могли взять их оттуда.
+  const exported = { isValidISODate, daysBetween, indexToDate };
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = exported;
+  } else {
+    window.dateUtils = exported;
+  }
+})();
