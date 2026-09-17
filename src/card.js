@@ -77,7 +77,10 @@
       if (ctx.measureText(text).width <= maxWidth) break;
       size -= 4;
     }
-    return size;
+    // Шаг в 4px не всегда делится ровно на (maxSize - minSize) — без этой
+    // подстраховки цикл может проскочить minSize на 1-2px вниз (поймано
+    // ревью: у подписи даты 30→20 разница 10 не делится на 4 без остатка).
+    return Math.max(size, minSize);
   }
 
   function roundedRect(ctx, x, y, w, h, r) {
