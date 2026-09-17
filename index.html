@@ -77,6 +77,16 @@
       <p class="note">Цена — среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.</p>
     </section>
 
+    <section class="card" aria-label="Сохранить картинку">
+      <h2 class="card-title">Поделиться результатом</h2>
+      <button type="button" class="button-primary" id="card-button">Сохранить картинку</button>
+      <img id="card-preview" class="card-preview" alt="Карточка с результатом" hidden />
+      <div class="card-actions">
+        <button type="button" class="button-secondary" id="card-share" hidden>Поделиться</button>
+        <a class="button-secondary" id="card-download" download="btc-what-if.png" hidden>Скачать</a>
+      </div>
+    </section>
+
     <p class="loading-note" id="loading-note">Загружаем историю цен…</p>
   </main>
 
@@ -87,5 +97,6 @@
   <script src="src/date-utils.js"></script>
   <script src="src/dca.js"></script>
   <script src="src/app.js"></script>
+  <script src="src/card.js"></script>
 </body>
 </html>

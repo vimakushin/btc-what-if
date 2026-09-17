@@ -29,7 +29,7 @@
 
 // В Node — обычный require. В браузере (страница, без сборщика) require
 // нет, а date-utils.js в этом случае уже положил себя в window.dateUtils.
-const { isValidISODate, daysBetween, indexToDate } =
+const { isValidISODate, daysBetween, indexToDate, clampDayOfMonth } =
   typeof require !== "undefined" ? require("./date-utils.js") : window.dateUtils;
 
 const MAX_AMOUNT = 1e9; // $1 млрд за одну покупку — с запасом отсекает мусорный/переполняющий ввод, реальные суммы кофе/подписок на порядки меньше
@@ -43,20 +43,14 @@ function fail(code, message) {
   return { ok: false, error: { code, message } };
 }
 
-function daysInMonth(year, monthIndex0) {
-  // monthIndex0: 0=январь. День 0 следующего месяца = последний день этого.
-  return new Date(Date.UTC(year, monthIndex0 + 1, 0)).getUTCDate();
-}
-
 // Правило для 29/30/31 числа: если в месяце нет такого дня, покупка
 // переносится на последний день этого месяца (а не пропускается и не
 // съезжает на 1-е число следующего). Выбрано так, чтобы у любого выбранного
 // числа месяца было ровно по одной покупке в каждом календарном месяце —
 // иначе, скажем, 31-е число давало бы на 4-5 покупок меньше за 16 лет, чем
 // 15-е, что незаметно исказило бы сравнение дат начала между собой.
-function clampDayOfMonth(year, monthIndex0, day) {
-  return Math.min(day, daysInMonth(year, monthIndex0));
-}
+// Сама функция clampDayOfMonth — в date-utils.js: тот же перенос нужен и
+// для yearsAgo() на карточке-картинке (29 февраля N лет назад).
 
 function findExact(sortedArr, value) {
   let lo = 0;

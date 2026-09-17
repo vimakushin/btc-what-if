@@ -36,6 +36,10 @@
     monthlyNote: document.getElementById("monthly-note"),
     asOfNote: document.getElementById("as-of-note"),
     loadingNote: document.getElementById("loading-note"),
+    cardButton: document.getElementById("card-button"),
+    cardPreview: document.getElementById("card-preview"),
+    cardDownload: document.getElementById("card-download"),
+    cardShare: document.getElementById("card-share"),
   };
 
   const SVG_WIDTH = 1000;
@@ -266,6 +270,7 @@
     updateMonthlyNote(startDate);
 
     const result = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate }, priceData, scheduleIndex);
+    el.cardButton.disabled = !result.ok;
     if (!result.ok) {
       showResultError(result.error.message);
       return;
@@ -287,11 +292,90 @@
     return "";
   }
 
+  function habitLabel() {
+    const preset = PRESETS[state.presetKey];
+    return preset ? preset.label : "своя сумма";
+  }
+
+  function periodicityLabel(periodicity) {
+    return { daily: "в день", weekly: "в неделю", monthly: "в месяц" }[periodicity];
+  }
+
+  // Герой карточки — ряд из трёх колонок: 10 лет назад / твоя дата / год
+  // назад. Личный результат — не отдельная огромная цифра, а средняя
+  // колонка того же ряда (подсвечена отдельно в card.js), иначе с одного
+  // взгляда в уменьшённом превью читается только "сколько заработал я",
+  // и мы неотличимы от рекламных калькуляторов конкурентов (CONCEPT.md,
+  // «Чем мы отличаемся»). Середина ряда — фиксированная позиция для
+  // "твоей" колонки, а не хронологическая: так подсветка всегда там же,
+  // даже если выбранная дата на самом деле раньше "10 лет назад" или
+  // позже "года назад". Опорных точек теперь две, а не три (раньше была
+  // ещё "5 лет назад") — она чаще всего дублировала личный результат,
+  // потому что дефолтная позиция ползунка на странице — тоже 5 лет назад;
+  // если выбранная дата случайно окажется рядом с одной из двух оставшихся
+  // опорных точек, это не ошибка, а честное совпадение (см. card.js).
+  function computeCardColumns(startDate, result) {
+    function anchorColumn(years, label) {
+      const anchorDate = dateUtils.yearsAgo(priceData.asOf, years);
+      const r = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate: anchorDate }, priceData, scheduleIndex);
+      return r.ok ? { label, dateLabel: formatDateRu(anchorDate), profitPct: r.profitPct, isYou: false } : null;
+    }
+
+    return [
+      anchorColumn(10, "10 лет назад"),
+      { label: "твой выбор", dateLabel: formatDateRu(startDate), profitPct: result.profitPct, profitUsd: result.profitUsd, isYou: true },
+      anchorColumn(1, "год назад"),
+    ];
+  }
+
+  let lastCardObjectUrl = null;
+
+  // Картинка рисуется на canvas src/card.js по текущему состоянию —
+  // те же числа, что уже на экране (evaluate() с теми же amount/
+  // periodicity/startDate). Canvas не показывается сам — только превью-
+  // картинка из него. Кнопка недоступна (render() ставит disabled), пока
+  // текущий ввод не даёт валидного результата, поэтому evaluate() здесь
+  // уже гарантированно ok.
+  function generateCard() {
+    const startDate = dateUtils.indexToDate(priceData.start, state.startIdx);
+    const result = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate }, priceData, scheduleIndex);
+    if (!result.ok) return;
+
+    const canvas = document.createElement("canvas");
+    window.renderShareCard(canvas, {
+      habitLabel: habitLabel(),
+      amount: state.amount,
+      periodicityLabel: periodicityLabel(state.periodicity),
+      columns: computeCardColumns(startDate, result),
+      asOf: priceData.asOf,
+    });
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      if (lastCardObjectUrl) URL.revokeObjectURL(lastCardObjectUrl);
+      const url = URL.createObjectURL(blob);
+      lastCardObjectUrl = url;
+      el.cardPreview.src = url;
+      el.cardPreview.hidden = false;
+
+      el.cardDownload.href = url;
+      el.cardDownload.hidden = false;
+
+      const file = new File([blob], "btc-what-if.png", { type: "image/png" });
+      const canShareFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+      el.cardShare.hidden = !canShareFile;
+      if (canShareFile) {
+        el.cardShare.onclick = () => navigator.share({ files: [file] }).catch(() => {});
+      }
+    }, "image/png");
+  }
+
   function wireEvents() {
     el.presetButtons.forEach((btn) => btn.addEventListener("click", () => selectPreset(btn.dataset.preset)));
     el.customAmount.addEventListener("input", onCustomAmountInput);
     el.customPeriodicity.addEventListener("change", onCustomPeriodicityChange);
     el.slider.addEventListener("input", onSliderInput);
+    el.cardButton.addEventListener("click", generateCard);
   }
 
   async function init() {
@@ -327,6 +411,11 @@
     render();
     setLoading(false, false);
   }
+
+  // src/card.js рисует картинку тем же числовым форматом, что и страница —
+  // без этого экспорта пришлось бы дублировать форматирование денег/
+  // процентов/дат в двух файлах, и они рано или поздно разъехались бы.
+  window.appFormat = { formatMoney, formatSignedMoney, formatPct, resultSign, formatDateRu };
 
   init();
 })();
