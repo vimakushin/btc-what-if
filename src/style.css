@@ -26,6 +26,23 @@ body {
 
 .header {
   margin-bottom: 20px;
+  position: relative;
+}
+
+.lang-switch-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+}
+
+.lang-switch {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
 }
 
 .header h1 {
@@ -232,6 +249,13 @@ body {
 
 .result-pct.bad {
   color: var(--bad);
+}
+
+.joke {
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0 0 12px;
 }
 
 .note {

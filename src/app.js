@@ -1,23 +1,30 @@
 // Логика страницы: ввод -> ползунок -> кривая -> результат. Никакой сети,
 // кроме одного fetch за файлом цен ниже. Арифметика — вся в src/dca.js,
-// здесь только чтение состояния формы и отрисовка.
+// текст — весь в src/strings.js, здесь только чтение состояния формы,
+// перевод чисел/дат под текущий язык и отрисовка.
 
 "use strict";
 
 (function () {
+  // Язык страницы определяется параметром в адресе, а не выбором в JS —
+  // это даёт две обычные шареable ссылки без сервера и без сборки под
+  // два разных HTML-файла: ?lang=en для английской версии, без параметра
+  // (или с любым другим значением) — русская по умолчанию.
+  function currentLang() {
+    return new URLSearchParams(location.search).get("lang") === "en" ? "en" : "ru";
+  }
+  const lang = currentLang();
+  const STR = window.i18n.strings[lang];
+
   const PRESETS = {
-    coffee: { label: "Кофе", amount: 5, periodicity: "daily" },
-    cigarettes: { label: "Сигареты", amount: 8, periodicity: "daily" },
-    meals: { label: "Обеды", amount: 12, periodicity: "daily" },
-    subscription: { label: "Подписка", amount: 15, periodicity: "monthly" },
+    coffee: { amount: 5, periodicity: "daily" },
+    cigarettes: { amount: 8, periodicity: "daily" },
+    meals: { amount: 12, periodicity: "daily" },
+    subscription: { amount: 15, periodicity: "monthly" },
   };
 
-  const MONTH_NAMES_RU = [
-    "января", "февраля", "марта", "апреля", "мая", "июня",
-    "июля", "августа", "сентября", "октября", "ноября", "декабря",
-  ];
-
   const el = {
+    langSwitch: document.getElementById("lang-switch"),
     presetButtons: Array.from(document.querySelectorAll(".preset")),
     customAmount: document.getElementById("custom-amount"),
     customPeriodicity: document.getElementById("custom-periodicity"),
@@ -33,6 +40,7 @@
     value: document.getElementById("result-value"),
     diffUsd: document.getElementById("result-diff-usd"),
     diffPct: document.getElementById("result-diff-pct"),
+    joke: document.getElementById("result-joke"),
     monthlyNote: document.getElementById("monthly-note"),
     asOfNote: document.getElementById("as-of-note"),
     loadingNote: document.getElementById("loading-note"),
@@ -56,13 +64,14 @@
     startIdx: 0,
   };
 
-  function formatDateRu(iso) {
+  function formatDate(iso) {
     const [y, m, d] = iso.split("-").map(Number);
-    return `${d} ${MONTH_NAMES_RU[m - 1]} ${y}`;
+    const month = STR.months[m - 1];
+    return STR.dateOrder === "mdy" ? `${month} ${d}, ${y}` : `${d} ${month} ${y}`;
   }
 
   function formatMoney(v) {
-    return "$" + new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(Math.round(v));
+    return "$" + new Intl.NumberFormat(STR.locale, { maximumFractionDigits: 0 }).format(Math.round(v));
   }
 
   // profitUsd и profitPct математически всегда одного знака (второе — это
@@ -90,7 +99,7 @@
   function formatPct(v, sign) {
     const abs = Math.abs(v);
     const digits = abs >= 100 ? 0 : 1;
-    const formattedAbs = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(abs);
+    const formattedAbs = new Intl.NumberFormat(STR.locale, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(abs);
     return sign + formattedAbs + "%";
   }
 
@@ -102,9 +111,46 @@
     return Math.sign(pct) * Math.log10(1 + Math.abs(pct));
   }
 
+  function lookupPath(obj, path) {
+    return path.split(".").reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
+  }
+
+  function otherLangUrl() {
+    const url = new URL(location.href);
+    if (lang === "en") url.searchParams.delete("lang");
+    else url.searchParams.set("lang", "en");
+    return url.toString();
+  }
+
+  // Один проход по разметке при загрузке — переводит всё, что размечено
+  // data-i18n* в index.html. Структура страницы одна на оба языка, меняется
+  // только это. Динамический текст (числа, даты, реплики по результату)
+  // сюда не входит — он собирается отдельно в render()/renderExtremes().
+  function applyStaticStrings() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((node) => {
+      const value = lookupPath(STR, node.getAttribute("data-i18n"));
+      if (value !== undefined) node.textContent = value;
+    });
+    document.querySelectorAll("[data-i18n-aria]").forEach((node) => {
+      const value = lookupPath(STR, node.getAttribute("data-i18n-aria"));
+      if (value !== undefined) node.setAttribute("aria-label", value);
+    });
+    document.querySelectorAll("[data-i18n-content]").forEach((node) => {
+      const value = lookupPath(STR, node.getAttribute("data-i18n-content"));
+      if (value !== undefined) node.setAttribute("content", value);
+    });
+    document.querySelectorAll("[data-i18n-alt]").forEach((node) => {
+      const value = lookupPath(STR, node.getAttribute("data-i18n-alt"));
+      if (value !== undefined) node.setAttribute("alt", value);
+    });
+    el.langSwitch.textContent = STR.langSwitch;
+    el.langSwitch.href = otherLangUrl();
+  }
+
   function setLoading(isLoading, isError) {
     if (isError) {
-      el.loadingNote.textContent = "Не получилось загрузить историю цен. Обнови страницу.";
+      el.loadingNote.textContent = STR.loading.error;
       el.loadingNote.hidden = false;
       return;
     }
@@ -167,7 +213,11 @@
     }
     curveCache = { periodicity, points: c.points, best: bw.best, worst: bw.worst, tMin, tMax };
     drawCurvePath();
-    renderExtremes();
+    // Не здесь: renderExtremes() зависит и от суммы (нужна для доллара в
+    // строке), а не только от периодичности — переключение пресета с той
+    // же периодичностью (кофе → сигареты, оба "в день") не пересчитало бы
+    // сумму, если бы вызов остался тут. Вызывается из render() на каждое
+    // изменение состояния, где сумма уже известна валидной.
   }
 
   function xForIndex(idx) {
@@ -199,7 +249,8 @@
   // времени, а вся мысль продукта именно в нём: чем позже начал, тем
   // меньше досталось. Ось не зависит от периодичности (у curve() всегда
   // одна точка на каждый календарный день), поэтому считается один раз
-  // при загрузке данных, а не при каждой смене периодичности.
+  // при загрузке данных, а не при каждой смене периодичности. Год —
+  // просто число, переводить нечего, на обоих языках выглядит одинаково.
   const YEAR_STEP = 2;
 
   function drawYearAxis() {
@@ -238,10 +289,29 @@
     });
   }
 
+  // Деньги в строке лучшего/худшего момента, не только процент: на лучшей
+  // дате истории (2010-08-17) процент — то самое "число, которое
+  // перестаёт что-либо значить" из CONCEPT.md ("Что показали данные") —
+  // без суммы в долларах строка нарушала бы уже принятое решение "деньги
+  // первой строкой, процент вторичным уточнением" (найдено редактором).
+  function extremeLine(template, point) {
+    const sign = resultSign(point.profitPct);
+    const r = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate: point.startDate }, priceData, scheduleIndex);
+    return window.i18n.formatTemplate(template, {
+      date: formatDate(point.startDate),
+      pct: formatPct(point.profitPct, sign),
+      // Пока текущая сумма невалидна (evaluate() для неё же и упал бы в
+      // главном результате), — прочерк, а не "—" для всей строки: без
+      // этого рядом с сообщением об ошибке ввода зависла бы сумма,
+      // посчитанная по прошлой, уже невидимой сумме (найдено ревью).
+      usd: r.ok ? formatSignedMoney(r.profitUsd, sign) : "—",
+    });
+  }
+
   function renderExtremes() {
     const { best, worst } = curveCache;
-    el.best.textContent = `Лучший момент: ${formatDateRu(best.startDate)} — ${formatPct(best.profitPct, resultSign(best.profitPct))}`;
-    el.worst.textContent = `Худший момент: ${formatDateRu(worst.startDate)} — ${formatPct(worst.profitPct, resultSign(worst.profitPct))}`;
+    el.best.textContent = extremeLine(STR.curve.best, best);
+    el.worst.textContent = extremeLine(STR.curve.worst, worst);
   }
 
   function updateMarker() {
@@ -255,24 +325,40 @@
     el.monthlyNote.hidden = !(state.periodicity === "monthly" && day >= 29);
   }
 
+  // dca.js возвращает только код ошибки — арифметика не хранит текст ни
+  // на каком языке. Перевод в сообщение и подстановка чисел/дат — здесь.
+  function errorMessage(error) {
+    const template = STR.errors[error.code];
+    return window.i18n.formatTemplate(template, {
+      max: dca.MAX_AMOUNT.toLocaleString(STR.locale),
+      start: priceData ? priceData.start : "",
+      asOf: priceData ? priceData.asOf : "",
+    });
+  }
+
   function showResultError(message) {
     el.spent.textContent = "—";
     el.value.textContent = "—";
     el.diffUsd.textContent = "—";
     el.diffPct.textContent = message;
     el.diffPct.className = "result-pct";
+    el.joke.textContent = "";
   }
 
   function render() {
     const startDate = dateUtils.indexToDate(priceData.start, state.startIdx);
-    el.sliderDateLabel.textContent = formatDateRu(startDate);
+    el.sliderDateLabel.textContent = formatDate(startDate);
     updateMarker();
     updateMonthlyNote(startDate);
+    // Не зависит от валидности текущего ввода — extremeLine() считает
+    // свой собственный evaluate() на датах экстремумов и сама решает,
+    // показывать сумму или прочерк, если сумма сейчас невалидна.
+    renderExtremes();
 
     const result = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate }, priceData, scheduleIndex);
     el.cardButton.disabled = !result.ok;
     if (!result.ok) {
-      showResultError(result.error.message);
+      showResultError(errorMessage(result.error));
       return;
     }
 
@@ -284,6 +370,7 @@
     el.diffUsd.className = "result-money " + signClass(sign);
     el.diffPct.textContent = formatPct(result.profitPct, sign);
     el.diffPct.className = "result-pct " + signClass(sign);
+    el.joke.textContent = window.i18n.pickJoke(lang, result.profitPct);
   }
 
   function signClass(sign) {
@@ -293,12 +380,12 @@
   }
 
   function habitLabel() {
-    const preset = PRESETS[state.presetKey];
-    return preset ? preset.label : "своя сумма";
+    const preset = STR.input.presets[state.presetKey];
+    return preset ? preset.label : STR.input.customFallbackLabel;
   }
 
   function periodicityLabel(periodicity) {
-    return { daily: "в день", weekly: "в неделю", monthly: "в месяц" }[periodicity];
+    return STR.input.periodicityShort[periodicity];
   }
 
   // Герой карточки — ряд из трёх колонок: 10 лет назад / твоя дата / год
@@ -315,16 +402,16 @@
   // если выбранная дата случайно окажется рядом с одной из двух оставшихся
   // опорных точек, это не ошибка, а честное совпадение (см. card.js).
   function computeCardColumns(startDate, result) {
-    function anchorColumn(years, label) {
+    function anchorColumn(years) {
       const anchorDate = dateUtils.yearsAgo(priceData.asOf, years);
       const r = dca.evaluate({ amount: state.amount, periodicity: state.periodicity, startDate: anchorDate }, priceData, scheduleIndex);
-      return r.ok ? { label, dateLabel: formatDateRu(anchorDate), profitPct: r.profitPct, isYou: false } : null;
+      return r.ok ? { label: STR.shareCard.anchorLabels[years], dateLabel: formatDate(anchorDate), profitPct: r.profitPct, isYou: false } : null;
     }
 
     return [
-      anchorColumn(10, "10 лет назад"),
-      { label: "твой выбор", dateLabel: formatDateRu(startDate), profitPct: result.profitPct, profitUsd: result.profitUsd, isYou: true },
-      anchorColumn(1, "год назад"),
+      anchorColumn(10),
+      { dateLabel: formatDate(startDate), profitPct: result.profitPct, profitUsd: result.profitUsd, isYou: true },
+      anchorColumn(1),
     ];
   }
 
@@ -343,6 +430,7 @@
 
     const canvas = document.createElement("canvas");
     window.renderShareCard(canvas, {
+      lang,
       habitLabel: habitLabel(),
       amount: state.amount,
       periodicityLabel: periodicityLabel(state.periodicity),
@@ -379,6 +467,7 @@
   }
 
   async function init() {
+    applyStaticStrings();
     setLoading(true, false);
     let data;
     try {
@@ -401,7 +490,7 @@
     state.startIdx = Math.max(0, fiveYearsAgoIdx);
     el.slider.value = String(state.startIdx);
 
-    el.asOfNote.textContent = `Цены по ${formatDateRu(priceData.asOf)} включительно, сутки — по UTC.`;
+    el.asOfNote.textContent = window.i18n.formatTemplate(STR.footer.asOf, { date: formatDate(priceData.asOf) });
 
     syncCustomInputsFromState();
     markActivePreset();
@@ -412,10 +501,10 @@
     setLoading(false, false);
   }
 
-  // src/card.js рисует картинку тем же числовым форматом, что и страница —
-  // без этого экспорта пришлось бы дублировать форматирование денег/
-  // процентов/дат в двух файлах, и они рано или поздно разъехались бы.
-  window.appFormat = { formatMoney, formatSignedMoney, formatPct, resultSign, formatDateRu };
+  // src/card.js рисует картинку тем же числовым форматом и тем же языком,
+  // что и страница — без этого экспорта пришлось бы дублировать
+  // форматирование и текст в двух файлах, и они рано или поздно разъехались бы.
+  window.appFormat = { formatMoney, formatSignedMoney, formatPct, resultSign, formatDate };
 
   init();
 })();

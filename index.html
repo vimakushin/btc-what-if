@@ -3,48 +3,49 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>А если бы я купил биткоин?</title>
-  <meta name="description" content="Считает, во что превратились бы твои привычные траты в биткоине — и честно показывает, что при другой дате начала это могло быть и убытком." />
+  <title data-i18n="meta.title">А если бы я купил биткоин?</title>
+  <meta name="description" data-i18n-content="meta.description" content="Считает, во что превратились бы твои привычные траты в биткоине — и честно показывает, что при другой дате начала это могло быть и убытком." />
   <link rel="stylesheet" href="src/style.css" />
 </head>
 <body>
   <header class="header">
-    <h1>А если бы я купил биткоин?</h1>
-    <p class="lead">Выбери привычную трату и подвигай дату начала — увидишь и красивую цифру, и то, чего она стоила.</p>
+    <p class="lang-switch-wrap"><a href="#" id="lang-switch" class="lang-switch">EN</a></p>
+    <h1 data-i18n="header.title">А если бы я купил биткоин?</h1>
+    <p class="lead" data-i18n="header.lead">Выбери привычную трату и подвигай дату начала — увидишь и красивую цифру, и то, чего она стоила.</p>
   </header>
 
   <main>
-    <section class="card" aria-label="Что покупаем">
-      <h2 class="card-title">Что откладываем в биткоин</h2>
+    <section class="card" data-i18n-aria="input.cardTitle" aria-label="Что покупаем">
+      <h2 class="card-title" data-i18n="input.cardTitle">Что откладываем в биткоин</h2>
       <div class="presets" id="presets">
-        <button type="button" class="preset" data-preset="coffee">Кофе<span class="preset-hint">$5 в день</span></button>
-        <button type="button" class="preset" data-preset="cigarettes">Сигареты<span class="preset-hint">$8 в день</span></button>
-        <button type="button" class="preset" data-preset="meals">Обеды<span class="preset-hint">$12 в день</span></button>
-        <button type="button" class="preset" data-preset="subscription">Подписка<span class="preset-hint">$15 в месяц</span></button>
+        <button type="button" class="preset" data-preset="coffee"><span data-i18n="input.presets.coffee.label">Кофе</span><span class="preset-hint" data-i18n="input.presets.coffee.hint">$5 в день</span></button>
+        <button type="button" class="preset" data-preset="cigarettes"><span data-i18n="input.presets.cigarettes.label">Сигареты</span><span class="preset-hint" data-i18n="input.presets.cigarettes.hint">$8 в день</span></button>
+        <button type="button" class="preset" data-preset="meals"><span data-i18n="input.presets.meals.label">Обеды</span><span class="preset-hint" data-i18n="input.presets.meals.hint">$12 в день</span></button>
+        <button type="button" class="preset" data-preset="subscription"><span data-i18n="input.presets.subscription.label">Подписка</span><span class="preset-hint" data-i18n="input.presets.subscription.hint">$15 в месяц</span></button>
       </div>
       <div class="custom-input">
         <label class="field">
-          <span>Своя сумма, $</span>
+          <span data-i18n="input.customAmountLabel">Своя сумма, $</span>
           <input type="number" id="custom-amount" min="0" step="0.01" inputmode="decimal" />
         </label>
         <label class="field">
-          <span>Как часто</span>
+          <span data-i18n="input.customPeriodicityLabel">Как часто</span>
           <select id="custom-periodicity">
-            <option value="daily">каждый день</option>
-            <option value="weekly">раз в неделю</option>
-            <option value="monthly">раз в месяц</option>
+            <option value="daily" data-i18n="input.periodicityOptions.daily">каждый день</option>
+            <option value="weekly" data-i18n="input.periodicityOptions.weekly">раз в неделю</option>
+            <option value="monthly" data-i18n="input.periodicityOptions.monthly">раз в месяц</option>
           </select>
         </label>
       </div>
     </section>
 
-    <section class="card card-slider" aria-label="Дата начала">
-      <h2 class="card-title">С какого дня считаем</h2>
-      <input type="range" id="start-slider" class="slider" min="0" max="0" value="0" disabled aria-label="Дата начала покупок" />
+    <section class="card card-slider" data-i18n-aria="slider.cardTitle" aria-label="Дата начала">
+      <h2 class="card-title" data-i18n="slider.cardTitle">С какого дня считаем</h2>
+      <input type="range" id="start-slider" class="slider" min="0" max="0" value="0" disabled data-i18n-aria="slider.ariaLabel" aria-label="Дата начала покупок" />
       <p class="slider-date" id="start-date-label">—</p>
     </section>
 
-    <section class="card" aria-label="Кривая результата по всем датам начала">
+    <section class="card" id="curve-section" data-i18n-aria="curve.ariaLabel" aria-label="Кривая результата по всем датам начала">
       <div class="curve-wrap">
         <svg id="curve-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
           <line id="curve-zero" x1="0" y1="150" x2="1000" y2="150" class="curve-zero-line" />
@@ -52,48 +53,50 @@
           <circle id="curve-marker" class="curve-marker" cx="0" cy="150" r="6" />
         </svg>
         <div class="curve-axis" id="curve-axis" aria-hidden="true"></div>
-        <p class="curve-caption">Форма кривой, не проценты напрямую — иначе обвал последних лет спрятался бы за скачком 2010 года. Точные числа — у ползунка и в результате ниже.</p>
+        <p class="curve-caption" data-i18n="curve.caption">Форма кривой, не проценты напрямую — иначе обвал последних лет спрятался бы за скачком 2010 года. Точные числа — у ползунка и в результате ниже.</p>
       </div>
-      <p class="extreme" id="best-moment">Лучший момент: —</p>
-      <p class="extreme" id="worst-moment">Худший момент: —</p>
+      <p class="extreme" id="best-moment" data-i18n="curve.bestPlaceholder">Лучший момент: —</p>
+      <p class="extreme" id="worst-moment" data-i18n="curve.worstPlaceholder">Худший момент: —</p>
     </section>
 
-    <section class="card" aria-label="Результат">
+    <section class="card" id="result-section" data-i18n-aria="result.ariaLabel" aria-label="Результат">
       <p class="result-line">
-        <span class="result-label">Потрачено</span>
+        <span class="result-label" data-i18n="result.spent">Потрачено</span>
         <span class="result-money" id="result-spent">—</span>
       </p>
       <p class="result-line">
-        <span class="result-label">Стало бы</span>
+        <span class="result-label" data-i18n="result.becomes">Стало бы</span>
         <span class="result-money" id="result-value">—</span>
       </p>
       <p class="result-line result-diff">
-        <span class="result-label">Разница</span>
+        <span class="result-label" data-i18n="result.diff">Разница</span>
         <span class="result-money" id="result-diff-usd">—</span>
       </p>
       <p class="result-pct" id="result-diff-pct">—</p>
-      <p class="note" id="monthly-note" hidden>Выбранное число есть не в каждом месяце — в короткие месяцы покупка сдвигается на последний день месяца.</p>
-      <p class="note">Расчёт строго по расписанию, без комиссий и налогов.</p>
-      <p class="note">Цена — среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.</p>
+      <p class="joke" id="result-joke"></p>
+      <p class="note" id="monthly-note" hidden data-i18n="result.monthlyNote">Выбранное число есть не в каждом месяце — в короткие месяцы покупка сдвигается на последний день месяца.</p>
+      <p class="note" data-i18n="result.noFeesNote">Расчёт строго по расписанию, без комиссий и налогов.</p>
+      <p class="note" data-i18n="result.priceSourceNote">Цена — среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.</p>
     </section>
 
-    <section class="card" aria-label="Сохранить картинку">
-      <h2 class="card-title">Поделиться результатом</h2>
-      <button type="button" class="button-primary" id="card-button">Сохранить картинку</button>
-      <img id="card-preview" class="card-preview" alt="Карточка с результатом" hidden />
+    <section class="card" data-i18n-aria="cardSection.title" aria-label="Сохранить картинку">
+      <h2 class="card-title" data-i18n="cardSection.title">Поделиться результатом</h2>
+      <button type="button" class="button-primary" id="card-button" data-i18n="cardSection.saveButton">Сохранить картинку</button>
+      <img id="card-preview" class="card-preview" data-i18n-alt="cardSection.title" alt="Карточка с результатом" hidden />
       <div class="card-actions">
-        <button type="button" class="button-secondary" id="card-share" hidden>Поделиться</button>
-        <a class="button-secondary" id="card-download" download="btc-what-if.png" hidden>Скачать</a>
+        <button type="button" class="button-secondary" id="card-share" hidden data-i18n="cardSection.shareButton">Поделиться</button>
+        <a class="button-secondary" id="card-download" download="btc-what-if.png" hidden data-i18n="cardSection.downloadButton">Скачать</a>
       </div>
     </section>
 
-    <p class="loading-note" id="loading-note">Загружаем историю цен…</p>
+    <p class="loading-note" id="loading-note" data-i18n="loading.loading">Загружаем историю цен…</p>
   </main>
 
   <footer class="footer">
     <p class="note" id="as-of-note">—</p>
   </footer>
 
+  <script src="src/strings.js"></script>
   <script src="src/date-utils.js"></script>
   <script src="src/dca.js"></script>
   <script src="src/app.js"></script>

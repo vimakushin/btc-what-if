@@ -16,8 +16,13 @@
 // хранит свою копию палитры — иначе цвета карточки и страницы рано или
 // поздно разъехались бы при правке src/style.css.
 //
+// Текст (кроме уже отформатированных app.js подписей вроде habitLabel)
+// берётся из src/strings.js по data.lang — своей копии текста carta.js
+// не хранит, как и своей копии цветов.
+//
 // @param {HTMLCanvasElement} canvas
 // @param {{
+//   lang: "ru"|"en",
 //   habitLabel: string,
 //   amount: number,
 //   periodicityLabel: string,
@@ -93,7 +98,7 @@
     ctx.closePath();
   }
 
-  function drawColumn(ctx, colors, format, column, colCx, colWidth) {
+  function drawColumn(ctx, colors, format, youBadge, column, colCx, colWidth) {
     const textMaxWidth = colWidth - 24;
     const { formatMoney, formatSignedMoney, formatPct, resultSign } = format;
 
@@ -114,7 +119,7 @@
 
     ctx.fillStyle = column.isYou ? colors.accent : colors.muted;
     ctx.font = `${column.isYou ? 700 : 400} 28px ${FONT_FAMILY}`;
-    ctx.fillText(column.isYou ? "ТВОЙ ВЫБОР" : column.label, colCx, 410);
+    ctx.fillText(column.isYou ? youBadge : column.label, colCx, 410);
 
     ctx.fillStyle = column.isYou ? colors.fg : colors.muted;
     const dateSize = fitFontSize(ctx, column.dateLabel, textMaxWidth, 400, 30, 20);
@@ -142,6 +147,7 @@
     const ctx = canvas.getContext("2d");
     const colors = readColors();
     const format = window.appFormat;
+    const t = window.i18n.strings[data.lang].shareCard;
 
     ctx.fillStyle = colors.bg;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -154,12 +160,12 @@
 
     ctx.fillStyle = colors.muted;
     ctx.font = `600 30px ${FONT_FAMILY}`;
-    ctx.fillText("А если бы я купил биткоин?", cx, 110);
+    ctx.fillText(t.kicker, cx, 110);
 
     ctx.fillStyle = colors.fg;
     ctx.font = `700 46px ${FONT_FAMILY}`;
-    ctx.fillText("Одна и та же привычка,", cx, 190);
-    ctx.fillText("три разные даты", cx, 244);
+    ctx.fillText(t.headlineLine1, cx, 190);
+    ctx.fillText(t.headlineLine2, cx, 244);
 
     ctx.fillStyle = colors.muted;
     ctx.font = `400 32px ${FONT_FAMILY}`;
@@ -168,7 +174,7 @@
     const columnWidth = (WIDTH - MARGIN * 2) / data.columns.length;
     data.columns.forEach((column, i) => {
       const colCx = MARGIN + columnWidth * (i + 0.5);
-      drawColumn(ctx, colors, format, column, colCx, columnWidth);
+      drawColumn(ctx, colors, format, t.youBadge, column, colCx, columnWidth);
     });
 
     ctx.strokeStyle = colors.border;
@@ -188,8 +194,8 @@
     // (проверено измерением ширины текста, не на глаз).
     ctx.fillStyle = colors.muted;
     ctx.font = `400 28px ${FONT_FAMILY}`;
-    ctx.fillText("Без комиссий и налогов.", cx, HEIGHT - 190);
-    ctx.fillText("Прошлый рост ничего не обещает будущему.", cx, HEIGHT - 150);
+    ctx.fillText(t.noFees, cx, HEIGHT - 190);
+    ctx.fillText(t.pastGrowth, cx, HEIGHT - 150);
 
     ctx.font = `500 32px ${FONT_FAMILY}`;
     ctx.fillStyle = colors.accent;
@@ -197,7 +203,7 @@
 
     ctx.fillStyle = colors.muted;
     ctx.font = `400 26px ${FONT_FAMILY}`;
-    ctx.fillText(`Цены BTC по ${format.formatDateRu(data.asOf)}, UTC`, cx, HEIGHT - 56);
+    ctx.fillText(window.i18n.formatTemplate(t.dataAsOf, { date: format.formatDate(data.asOf) }), cx, HEIGHT - 56);
   }
 
   window.renderShareCard = renderShareCard;
