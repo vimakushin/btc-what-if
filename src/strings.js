@@ -19,20 +19,27 @@
   // берётся первый диапазон, куда попадает процент. Шутки не переводятся
   // дословно (см. .claude/agents/editor.md) — на русском и английском
   // это разные фразы про одну и ту же мысль.
+  //
+  // Диапазоны max: -80 и max: -50 недостижимы на реальных данных: худший
+  // результат за всю историю цен — около −12.73% (CONCEPT.md, «Что
+  // показали данные»). Тексты для них не проверены на живом результате —
+  // это заготовка на случай более сильного падения рынка в будущем, а не
+  // такой же обкатанный текст, как остальные четыре диапазона. Не удалять:
+  // цены живые, диапазоны понадобятся при следующем сильном обвале.
   const JOKES_RU = [
     { max: -80, text: "Такое бывает. Это число говорит о времени, а не о тебе." },
-    { max: -50, text: "Тяжёлый результат — рынок иногда именно такой." },
+    { max: -50, text: "Тяжёлый результат. Рынок иногда именно такой." },
     { max: -20, text: "Рынок просто не подгадал под эту дату." },
-    { max: 0, text: "Почти получилось — рынку не хватило пары месяцев." },
-    { max: 500, text: "Неплохо — и это целиком заслуга календаря, не твоя." },
+    { max: 0, text: "Почти получилось. Рынку не хватило пары месяцев. Дело в календаре, а не в решении." },
+    { max: 500, text: "Неплохо, и это целиком заслуга календаря, не твоя." },
     { max: Infinity, text: "Красивая цифра. Она принадлежит году, в который ты зашёл, не тебе." },
   ];
   const JOKES_EN = [
     { max: -80, text: "That's a rough one. It says more about the timing than about you." },
-    { max: -50, text: "That stings — markets do that sometimes." },
+    { max: -50, text: "That stings. Markets do that sometimes." },
     { max: -20, text: "The market just didn't line up with this date." },
-    { max: 0, text: "So close — the market needed a couple more months." },
-    { max: 500, text: "Not bad — thank the calendar, not your instincts." },
+    { max: 0, text: "So close. The market needed a couple more months. Bad timing, not a bad call." },
+    { max: 500, text: "Not bad. Thank the calendar, not your instincts." },
     { max: Infinity, text: "Nice number. It belongs to the year you started, not to you." },
   ];
 
@@ -43,11 +50,11 @@
       dateOrder: "dmy",
       meta: {
         title: "А если бы я купил биткоин?",
-        description: "Считает, во что превратились бы твои привычные траты в биткоине — и честно показывает, что при другой дате начала это могло быть и убытком.",
+        description: "Считает, во что превратились бы твои привычные траты в биткоине, и честно показывает, что при другой дате начала это могло быть и убытком.",
       },
       header: {
         title: "А если бы я купил биткоин?",
-        lead: "Выбери привычную трату и подвигай дату начала — увидишь и красивую цифру, и то, чего она стоила.",
+        lead: "Выбери привычную трату и подвигай дату начала, чтобы увидеть и красивую цифру, и то, чего она стоила.",
       },
       langSwitch: "EN",
       input: {
@@ -70,9 +77,9 @@
       },
       curve: {
         ariaLabel: "Кривая результата по всем датам начала",
-        caption: "Форма кривой, не проценты напрямую — иначе обвал последних лет спрятался бы за скачком 2010 года. Точные числа — у ползунка и в результате ниже.",
-        best: "Лучший момент: {date} — {usd} ({pct})",
-        worst: "Худший момент: {date} — {usd} ({pct})",
+        caption: "Это форма кривой, а не проценты напрямую: иначе обвал последних лет спрятался бы за скачком 2010 года. Точные числа смотри у ползунка и в результате ниже.",
+        best: "Лучший момент: {date} · {usd} ({pct})",
+        worst: "Худший момент: {date} · {usd} ({pct})",
         // Заглушки на время до/при сбое загрузки файла цен — до этого
         // момента renderExtremes() (реальный перевод с датой и процентом)
         // ещё не отработал. Без своего ключа при неудачной загрузке
@@ -85,9 +92,9 @@
         spent: "Потрачено",
         becomes: "Стало бы",
         diff: "Разница",
-        monthlyNote: "Выбранное число есть не в каждом месяце — в короткие месяцы покупка сдвигается на последний день месяца.",
+        monthlyNote: "Выбранное число есть не в каждом месяце. В короткие месяцы покупка сдвигается на последний день месяца.",
         noFeesNote: "Расчёт строго по расписанию, без комиссий и налогов.",
-        priceSourceNote: "Цена — среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.",
+        priceSourceNote: "Цена посчитана как среднее по нескольким крупным биржам, на конкретной бирже число могло быть немного другим.",
       },
       jokes: JOKES_RU,
       cardSection: {
@@ -101,7 +108,7 @@
         error: "Не получилось загрузить историю цен. Обнови страницу.",
       },
       footer: {
-        asOf: "Цены по {date} включительно, сутки — по UTC.",
+        asOf: "Цены по {date} включительно, сутки считаются по UTC.",
       },
       errors: {
         INVALID_AMOUNT: "Сумма покупки должна быть числом.",
@@ -130,15 +137,15 @@
       dateOrder: "mdy",
       meta: {
         title: "What if I'd bought Bitcoin?",
-        description: "Turns your everyday spending into what it would be worth in Bitcoin — and honestly shows that a different start date could just as easily mean a loss.",
+        description: "Turns your everyday spending into what it would be worth in Bitcoin. Honestly shows that a different start date could just as easily mean a loss.",
       },
       header: {
         title: "What if I'd bought Bitcoin?",
-        lead: "Pick a habit, drag the start date — see the flashy number, and what it actually cost to get it.",
+        lead: "Pick a habit and drag the start date. You'll see the flashy number, and what it actually cost to get it.",
       },
       langSwitch: "RU",
       input: {
-        cardTitle: "What we're putting into Bitcoin",
+        cardTitle: "What's going into Bitcoin",
         customAmountLabel: "Your own amount, $",
         customPeriodicityLabel: "How often",
         periodicityOptions: { daily: "every day", weekly: "once a week", monthly: "once a month" },
@@ -152,14 +159,14 @@
         customFallbackLabel: "your own amount",
       },
       slider: {
-        cardTitle: "Which day we're starting from",
+        cardTitle: "When we're starting",
         ariaLabel: "Purchase start date",
       },
       curve: {
         ariaLabel: "Result curve across every possible start date",
-        caption: "This shape isn't a direct percent scale — otherwise the last few years' drop would hide behind the 2010 spike. Exact numbers are at the slider and in the result below.",
-        best: "Best moment: {date} — {usd} ({pct})",
-        worst: "Worst moment: {date} — {usd} ({pct})",
+        caption: "This shape isn't a direct percent scale. Otherwise, the last few years' drop would hide behind the 2010 spike. Exact numbers are at the slider and in the result below.",
+        best: "Best moment: {date} · {usd} ({pct})",
+        worst: "Worst moment: {date} · {usd} ({pct})",
         bestPlaceholder: "Best moment: —",
         worstPlaceholder: "Worst moment: —",
       },
@@ -168,9 +175,9 @@
         spent: "Spent",
         becomes: "Would be worth",
         diff: "Difference",
-        monthlyNote: "Not every month has the day you picked — in short months the purchase moves to the last day of that month.",
+        monthlyNote: "Not every month has the day you picked. In short months, the purchase moves to the last day of that month.",
         noFeesNote: "Calculated strictly on schedule, no fees or taxes.",
-        priceSourceNote: "Price is averaged across several major exchanges — a specific exchange could show a slightly different number.",
+        priceSourceNote: "Price is averaged across several major exchanges. A specific exchange could show a slightly different number.",
       },
       jokes: JOKES_EN,
       cardSection: {
@@ -193,7 +200,7 @@
         INVALID_PERIODICITY: "Frequency has to be one of: every day, once a week, once a month.",
         INVALID_DATE: "The date has to be a real calendar date in YYYY-MM-DD format.",
         INVALID_PRICE_DATA: "The BTC price file is broken or hasn't loaded.",
-        DATE_BEFORE_HISTORY: "Price data starts on {start} — nothing earlier is available.",
+        DATE_BEFORE_HISTORY: "Price data starts on {start}. Nothing earlier is available.",
         DATE_NOT_AVAILABLE: "Price data only goes through {asOf} (it updates once a day).",
       },
       shareCard: {

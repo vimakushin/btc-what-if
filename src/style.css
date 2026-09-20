@@ -13,6 +13,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden; /* страховка: числа вроде "+$574 111 919" — один нераздельный кусок текста и не должны толкать страницу вбок */
+}
+
 body {
   margin: 0;
   padding: 16px 16px 32px;
@@ -22,27 +26,43 @@ body {
   color: var(--fg);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+/* clearfix: без него .header схлопнулся бы до нулевой высоты — оба его
+   прямых потомка (lang-switch-wrap и h1) участвуют в обтекании, а не
+   в обычном потоке. */
+.header::after {
+  content: "";
+  display: table;
+  clear: both;
 }
 
 .header {
   margin-bottom: 20px;
-  position: relative;
 }
 
+/* float, а не position:absolute — заголовок обтекает ссылку сам, вместо
+   того чтобы накладываться на неё поверх. С absolute на узком экране
+   (375px) прямоугольники h1 и ссылки перекрывались и текст сливался
+   (найдено при проверке на реальном телефоне). */
 .lang-switch-wrap {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin: 0;
+  float: right;
+  margin: 0 0 8px 12px;
 }
 
 .lang-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.85rem;
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 4px 8px;
+  padding: 4px 10px;
 }
 
 .header h1 {
@@ -96,7 +116,16 @@ body {
 
 .preset.active {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+  /* Запасной вариант без color-mix() (нет в мобильном Safari до 16.2,
+     BACKLOG.md) — тот же акцент поверх фона через rgba вместо реального
+     смешивания цветов; полупрозрачность держит эффект похожим. */
+  background: rgba(247, 147, 26, 0.15);
+}
+
+@supports (background: color-mix(in srgb, red, blue)) {
+  .preset.active {
+    background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+  }
 }
 
 .preset-hint {
@@ -135,10 +164,51 @@ body {
   padding: 20px 16px;
 }
 
+/* Ползунок — главное взаимодействие всего проекта (MVP.md, «Ползунок
+   обязателен и заметен»), большинство трогает его пальцем, не мышью.
+   accent-color красит нативный бегунок, но не даёт задать его размер —
+   тот остаётся дефолтным для конкретного браузера/ОС и не гарантированно
+   крупным для точного попадания пальцем. Поэтому вместо accent-color —
+   явные стили track/thumb с фиксированным диаметром бегунка. */
 .slider {
   width: 100%;
   height: 44px;
-  accent-color: var(--accent);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: -16px; /* центрирует бегунок 40px на треке высотой 8px: (8-40)/2 */
+  cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+}
+
+.slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
 }
 
 .slider-date {
@@ -207,6 +277,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 8px;
   margin: 6px 0;
 }
 
@@ -216,6 +287,12 @@ body {
 }
 
 .result-money {
+  /* min-width:0 — иначе flex-элемент по умолчанию не сжимается меньше
+     своей "естественной" ширины, и очень длинная сумма толкает всю
+     строку (и страницу) вбок вместо переноса. */
+  min-width: 0;
+  overflow-wrap: break-word;
+  text-align: right;
   font-size: 1.3rem;
   font-weight: 600;
 }

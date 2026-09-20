@@ -7,11 +7,16 @@
 
 (function () {
   // Язык страницы определяется параметром в адресе, а не выбором в JS —
-  // это даёт две обычные шареable ссылки без сервера и без сборки под
-  // два разных HTML-файла: ?lang=en для английской версии, без параметра
-  // (или с любым другим значением) — русская по умолчанию.
+  // это даёт обычные шареable ссылки без сервера и без сборки под два
+  // разных HTML-файла: ?lang=en или ?lang=ru фиксируют версию явно, ссылка
+  // с таким параметром работает одинаково для любого читателя. Без
+  // параметра решает язык браузера: раздача в основном идёт на Reddit,
+  // то есть на англоязычную аудиторию, поэтому русский показываем только
+  // тем, у кого браузер русский, всем остальным — английский по умолчанию.
   function currentLang() {
-    return new URLSearchParams(location.search).get("lang") === "en" ? "en" : "ru";
+    const param = new URLSearchParams(location.search).get("lang");
+    if (param === "en" || param === "ru") return param;
+    return (navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "en";
   }
   const lang = currentLang();
   const STR = window.i18n.strings[lang];
@@ -115,10 +120,16 @@
     return path.split(".").reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
   }
 
+  // Ссылка переключателя всегда ставит параметр явно (а не снимает его),
+  // даже когда текущий язык определился по умолчанию, а не по параметру.
+  // Снятие параметра раньше означало "показать русский", потому что без
+  // параметра всегда была русская версия — теперь без параметра язык
+  // зависит от браузера, и для англоязычного браузера снятый параметр
+  // снова дал бы английский: кнопка выглядела бы рабочей, но не меняла
+  // бы язык (найдено ревью).
   function otherLangUrl() {
     const url = new URL(location.href);
-    if (lang === "en") url.searchParams.delete("lang");
-    else url.searchParams.set("lang", "en");
+    url.searchParams.set("lang", lang === "en" ? "ru" : "en");
     return url.toString();
   }
 
@@ -267,11 +278,6 @@
     const years = [];
     for (let y = startYear; y < endYear; y += YEAR_STEP) years.push(y);
     years.push(endYear);
-    // если предпоследняя метка слишком близко к последней — убираем её,
-    // чтобы подписи не наехали друг на друга у правого края
-    if (years.length > 1 && fractionForYear(years[years.length - 2]) > 0.92) {
-      years.splice(years.length - 2, 1);
-    }
 
     el.curveAxis.textContent = "";
     years.forEach((year, i) => {
@@ -287,6 +293,35 @@
       }
       el.curveAxis.appendChild(span);
     });
+
+    // Первая и последняя подписи не попадают на ровный шаг YEAR_STEP:
+    // история начинается 17 августа, а не 1 января, а сегодняшняя дата —
+    // почти никогда 1 января, поэтому зазор до их соседей иногда выходит
+    // меньше обычного шага (пример — 2010 и 2012 при истории с 2010-08-17).
+    // Раньше это лечилось отдельной проверкой только у правого края (порог
+    // 0.92) — здесь то же правило, но общее и по факту отрисованных
+    // прямоугольников, а не по заранее угаданному проценту: так оно
+    // одинаково работает у обоих краёв и на любой ширине экрана. Первую и
+    // последнюю подпись не трогаем никогда, остальные выбрасываем, если
+    // налезают на последнюю оставленную.
+    const spans = Array.from(el.curveAxis.children);
+    if (spans.length > 2) {
+      const MIN_GAP_PX = 4;
+      let lastKeptRect = spans[0].getBoundingClientRect();
+      for (let i = 1; i < spans.length - 1; i++) {
+        const rect = spans[i].getBoundingClientRect();
+        if (rect.left < lastKeptRect.right + MIN_GAP_PX) {
+          spans[i].remove();
+        } else {
+          lastKeptRect = rect;
+        }
+      }
+      const last = spans[spans.length - 1];
+      if (last.getBoundingClientRect().left < lastKeptRect.right + MIN_GAP_PX) {
+        const kept = Array.from(el.curveAxis.children).filter((s) => s !== last);
+        if (kept.length) kept[kept.length - 1].remove();
+      }
+    }
   }
 
   // Деньги в строке лучшего/худшего момента, не только процент: на лучшей
