@@ -28,6 +28,13 @@
     subscription: { amount: 15, periodicity: "monthly" },
   };
 
+  // Единственное место в коде, где записан адрес доната — обе языковые
+  // строки footer.donate собираются подстановкой в шаблон отсюда, а не
+  // хранят свою копию адреса, чтобы его не пришлось сверять на совпадение
+  // в нескольких местах.
+  const DONATE_ADDRESS = "0xf65e04f7b5761b6bdc42726a54ee467736d0ca74";
+  const DONATE_NETWORK = "BNB Smart Chain (BEP-20)";
+
   const el = {
     langSwitch: document.getElementById("lang-switch"),
     presetButtons: Array.from(document.querySelectorAll(".preset")),
@@ -48,6 +55,7 @@
     joke: document.getElementById("result-joke"),
     monthlyNote: document.getElementById("monthly-note"),
     asOfNote: document.getElementById("as-of-note"),
+    donateNote: document.getElementById("donate-note"),
     loadingNote: document.getElementById("loading-note"),
     cardButton: document.getElementById("card-button"),
     cardPreview: document.getElementById("card-preview"),
@@ -504,6 +512,9 @@
 
   async function init() {
     applyStaticStrings();
+    // Не зависит от цен, поэтому не ждёт fetch: показывается, даже если
+    // загрузка истории цен не удалась.
+    el.donateNote.textContent = window.i18n.formatTemplate(STR.footer.donate, { network: DONATE_NETWORK, address: DONATE_ADDRESS });
     setLoading(true, false);
     let data;
     try {
