@@ -12,9 +12,8 @@ const DATA_PATH = path.join(__dirname, "..", "data", "btc-usd-daily.json");
 const SOURCE_URL = "https://api.blockchain.info/charts/market-price";
 const OVERLAP_DAYS = 10;
 
-// Цена дня D в этом файле — цена на конец дня D по UTC (см. MVP.md,
-// «Принятые решения» → «Сутки считаются по UTC»). Записывается в сам
-// файл данных, чтобы это было видно и без чтения кода.
+// Цена дня D в этом файле — цена на конец дня D по UTC. Записывается
+// в сам файл данных, чтобы это было видно и без чтения кода.
 const TIMEZONE = "UTC";
 
 function toISODate(unixSeconds) {
