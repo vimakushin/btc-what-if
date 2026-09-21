@@ -33,7 +33,6 @@
   // хранят свою копию адреса, чтобы его не пришлось сверять на совпадение
   // в нескольких местах.
   const DONATE_ADDRESS = "0xf65e04f7b5761b6bdc42726a54ee467736d0ca74";
-  const DONATE_NETWORK = "BNB Smart Chain (BEP-20)";
 
   const el = {
     langSwitch: document.getElementById("lang-switch"),
@@ -514,7 +513,7 @@
     applyStaticStrings();
     // Не зависит от цен, поэтому не ждёт fetch: показывается, даже если
     // загрузка истории цен не удалась.
-    el.donateNote.textContent = window.i18n.formatTemplate(STR.footer.donate, { network: DONATE_NETWORK, address: DONATE_ADDRESS });
+    el.donateNote.textContent = window.i18n.formatTemplate(STR.footer.donate, { address: DONATE_ADDRESS });
     setLoading(true, false);
     let data;
     try {

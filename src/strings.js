@@ -105,7 +105,7 @@
       },
       footer: {
         asOf: "Цены по {date} включительно, сутки считаются по UTC.",
-        donate: "Сделано одним человеком, бесплатно, без рекламы и без сбора данных. Если пригодилось, вот адрес ({network}): {address}",
+        donate: "Сделано одним человеком, бесплатно, без рекламы и без сбора данных. Если пригодилось, вот адрес для USDT (сеть BNB Smart Chain, BEP-20): {address}",
       },
       errors: {
         INVALID_AMOUNT: "Сумма покупки должна быть числом.",
@@ -189,7 +189,7 @@
       },
       footer: {
         asOf: "Prices through {date}, using UTC days.",
-        donate: "Built by one person, free, no ads, no tracking. If it helped, here's the address ({network}): {address}",
+        donate: "Built by one person, free, no ads, no tracking. If it helped, here's an address for USDT (BNB Smart Chain, BEP-20): {address}",
       },
       errors: {
         INVALID_AMOUNT: "The purchase amount has to be a number.",
