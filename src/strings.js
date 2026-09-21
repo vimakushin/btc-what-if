@@ -95,7 +95,7 @@
       jokes: JOKES_RU,
       cardSection: {
         title: "Поделиться результатом",
-        saveButton: "Посмотреть результат",
+        saveButton: "Поделиться результатом",
         shareButton: "Поделиться",
         downloadButton: "Скачать",
       },
@@ -179,7 +179,7 @@
       jokes: JOKES_EN,
       cardSection: {
         title: "Share the result",
-        saveButton: "See your result",
+        saveButton: "Share your result",
         shareButton: "Share",
         downloadButton: "Download",
       },
