@@ -133,6 +133,10 @@
         noFees: "Без комиссий и налогов.",
         pastGrowth: "Прошлый рост ничего не обещает будущему.",
         dataAsOf: "Цены BTC по {date}, UTC",
+        // Адрес на карточке свой у каждого языка: без автоперехода тот, кто
+        // поделился английской карточкой, иначе отправил бы людей на
+        // русскую страницу.
+        siteUrl: "vimakushin.github.io/btc-what-if",
       },
     },
     en: {
@@ -223,6 +227,7 @@
         noFees: "No fees or taxes.",
         pastGrowth: "Past growth promises nothing about the future.",
         dataAsOf: "BTC prices through {date}, UTC",
+        siteUrl: "vimakushin.github.io/btc-what-if/en",
       },
     },
   };

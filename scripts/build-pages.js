@@ -20,7 +20,7 @@ const URL_EN = SITE + "en/";
 
 const PAGES = [
   { lang: "ru", out: "index.html", base: "", url: URL_RU, switchHref: "en/" },
-  { lang: "en", out: "en/index.html", base: "../", url: URL_EN, switchHref: "../?lang=ru" },
+  { lang: "en", out: "en/index.html", base: "../", url: URL_EN, switchHref: "../" },
 ];
 
 function escapeHtml(s) {

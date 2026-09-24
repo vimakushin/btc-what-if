@@ -43,11 +43,6 @@
   const MARGIN = 72;
   const FONT_FAMILY = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-  // Указана здесь одной константой, чтобы при переезде на свой домен
-  // поменять в одном месте. Пока пункт 8 чеклиста (публикация) не сделан —
-  // адрес предсказан по имени репозитория и аккаунта GitHub автора.
-  const SITE_URL = "vimakushin.github.io/btc-what-if";
-
   function readColors() {
     const style = getComputedStyle(document.documentElement);
     const read = (name) => style.getPropertyValue(name).trim();
@@ -197,7 +192,7 @@
 
     ctx.font = `500 32px ${FONT_FAMILY}`;
     ctx.fillStyle = colors.accent;
-    ctx.fillText(SITE_URL, cx, HEIGHT - 96);
+    ctx.fillText(t.siteUrl, cx, HEIGHT - 96);
 
     ctx.fillStyle = colors.muted;
     ctx.font = `400 26px ${FONT_FAMILY}`;
