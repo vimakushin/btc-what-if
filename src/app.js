@@ -1,24 +1,37 @@
 // Логика страницы: ввод -> ползунок -> кривая -> результат. Никакой сети,
 // кроме одного fetch за файлом цен ниже. Арифметика — вся в src/dca.js,
-// текст — весь в src/strings.js, здесь только чтение состояния формы,
-// перевод чисел/дат под текущий язык и отрисовка.
+// текст — весь в src/strings.js (статичный подставляет в страницу
+// scripts/build-pages.js, здесь только динамический), здесь только чтение
+// состояния формы, перевод чисел/дат под текущий язык и отрисовка.
 
 "use strict";
 
 (function () {
-  // Язык страницы определяется параметром в адресе, а не выбором в JS —
-  // это даёт обычные шареable ссылки без сервера и без сборки под два
-  // разных HTML-файла: ?lang=en или ?lang=ru фиксируют версию явно, ссылка
-  // с таким параметром работает одинаково для любого читателя. Без
-  // параметра решает язык браузера: раздача в основном идёт на Reddit,
-  // то есть на англоязычную аудиторию, поэтому русский показываем только
-  // тем, у кого браузер русский, всем остальным — английский по умолчанию.
-  function currentLang() {
-    const param = new URLSearchParams(location.search).get("lang");
-    if (param === "en" || param === "ru") return param;
-    return (navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "en";
+  // Файл цен лежит в data/ рядом с корнем сайта, а страница живёт по двум
+  // адресам (/ и /en/), поэтому путь считается от адреса самого скрипта:
+  // он подключён как {base}src/app.js и так находит корень при любом base.
+  const scriptUrl = document.currentScript.src;
+
+  // Язык страницы задан самой разметкой: корень — русская, /en/ —
+  // английская, тексты в неё подставляет scripts/build-pages.js. Поэтому
+  // язык определяется адресом, а поисковик видит оба текста без запуска
+  // скриптов. Здесь только решаем, не нужно ли увести человека на другую
+  // версию. Параметр ?lang=en / ?lang=ru главнее всего: старые ссылки и
+  // кнопка-переключатель ведут на нужную версию явно. Без параметра
+  // уводим только с корня: раздача идёт в основном на Reddit, то есть на
+  // англоязычную аудиторию, поэтому русский показываем только тем, у кого
+  // браузер русский. Тех, кто открыл /en/ напрямую, не трогаем, какой бы
+  // ни был у них язык браузера.
+  const lang = document.documentElement.lang;
+  const param = new URLSearchParams(location.search).get("lang");
+  const browserLang = (navigator.language || "").toLowerCase().startsWith("ru") ? "ru" : "en";
+  const wantedLang = param === "en" || param === "ru" ? param : lang === "ru" ? browserLang : lang;
+  if (wantedLang !== lang) {
+    // ?lang=ru нужен и при переходе на русскую версию: без него русская
+    // страница снова увела бы не-русский браузер обратно на /en/.
+    location.replace(new URL(wantedLang === "en" ? "en/" : "../?lang=ru", location.href));
+    return;
   }
-  const lang = currentLang();
   const STR = window.i18n.strings[lang];
 
   const PRESETS = {
@@ -35,7 +48,6 @@
   const DONATE_ADDRESS = "0xf65e04f7b5761b6bdc42726a54ee467736d0ca74";
 
   const el = {
-    langSwitch: document.getElementById("lang-switch"),
     presetButtons: Array.from(document.querySelectorAll(".preset")),
     customAmount: document.getElementById("custom-amount"),
     customPeriodicity: document.getElementById("custom-periodicity"),
@@ -121,49 +133,6 @@
   // лет — то есть ровно то, ради чего график нужен.
   function scaleY(pct) {
     return Math.sign(pct) * Math.log10(1 + Math.abs(pct));
-  }
-
-  function lookupPath(obj, path) {
-    return path.split(".").reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
-  }
-
-  // Ссылка переключателя всегда ставит параметр явно (а не снимает его),
-  // даже когда текущий язык определился по умолчанию, а не по параметру.
-  // Снятие параметра раньше означало "показать русский", потому что без
-  // параметра всегда была русская версия — теперь без параметра язык
-  // зависит от браузера, и для англоязычного браузера снятый параметр
-  // снова дал бы английский: кнопка выглядела бы рабочей, но не меняла
-  // бы язык — так уже было, к снятию параметра лучше не возвращаться.
-  function otherLangUrl() {
-    const url = new URL(location.href);
-    url.searchParams.set("lang", lang === "en" ? "ru" : "en");
-    return url.toString();
-  }
-
-  // Один проход по разметке при загрузке — переводит всё, что размечено
-  // data-i18n* в index.html. Структура страницы одна на оба языка, меняется
-  // только это. Динамический текст (числа, даты, реплики по результату)
-  // сюда не входит — он собирается отдельно в render()/renderExtremes().
-  function applyStaticStrings() {
-    document.documentElement.lang = lang;
-    document.querySelectorAll("[data-i18n]").forEach((node) => {
-      const value = lookupPath(STR, node.getAttribute("data-i18n"));
-      if (value !== undefined) node.textContent = value;
-    });
-    document.querySelectorAll("[data-i18n-aria]").forEach((node) => {
-      const value = lookupPath(STR, node.getAttribute("data-i18n-aria"));
-      if (value !== undefined) node.setAttribute("aria-label", value);
-    });
-    document.querySelectorAll("[data-i18n-content]").forEach((node) => {
-      const value = lookupPath(STR, node.getAttribute("data-i18n-content"));
-      if (value !== undefined) node.setAttribute("content", value);
-    });
-    document.querySelectorAll("[data-i18n-alt]").forEach((node) => {
-      const value = lookupPath(STR, node.getAttribute("data-i18n-alt"));
-      if (value !== undefined) node.setAttribute("alt", value);
-    });
-    el.langSwitch.textContent = STR.langSwitch;
-    el.langSwitch.href = otherLangUrl();
   }
 
   function setLoading(isLoading, isError) {
@@ -510,14 +479,13 @@
   }
 
   async function init() {
-    applyStaticStrings();
     // Не зависит от цен, поэтому не ждёт fetch: показывается, даже если
     // загрузка истории цен не удалась.
     el.donateNote.textContent = window.i18n.formatTemplate(STR.footer.donate, { address: DONATE_ADDRESS });
     setLoading(true, false);
     let data;
     try {
-      const res = await fetch("data/btc-usd-daily.json");
+      const res = await fetch(new URL("../data/btc-usd-daily.json", scriptUrl));
       if (!res.ok) throw new Error("HTTP " + res.status);
       data = await res.json();
     } catch (e) {

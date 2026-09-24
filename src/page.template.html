@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{meta.title}}</title>
+  <meta name="description" content="{{meta.description}}" />
+  <link rel="canonical" href="{{url}}" />
+  <link rel="alternate" hreflang="ru" href="{{urlRu}}" />
+  <link rel="alternate" hreflang="en" href="{{urlEn}}" />
+  <link rel="alternate" hreflang="x-default" href="{{urlRu}}" />
+  <link rel="stylesheet" href="{{base}}src/style.css" />
+</head>
+<body>
+  <header class="header">
+    <p class="lang-switch-wrap"><a href="{{switchHref}}" class="lang-switch">{{langSwitch}}</a></p>
+    <h1>{{header.title}}</h1>
+    <p class="lead">{{header.lead}}</p>
+  </header>
+
+  <main>
+    <section class="card" aria-label="{{input.cardTitle}}">
+      <h2 class="card-title">{{input.cardTitle}}</h2>
+      <div class="presets">
+        <button type="button" class="preset" data-preset="coffee"><span>{{input.presets.coffee.label}}</span><span class="preset-hint">{{input.presets.coffee.hint}}</span></button>
+        <button type="button" class="preset" data-preset="cigarettes"><span>{{input.presets.cigarettes.label}}</span><span class="preset-hint">{{input.presets.cigarettes.hint}}</span></button>
+        <button type="button" class="preset" data-preset="meals"><span>{{input.presets.meals.label}}</span><span class="preset-hint">{{input.presets.meals.hint}}</span></button>
+        <button type="button" class="preset" data-preset="subscription"><span>{{input.presets.subscription.label}}</span><span class="preset-hint">{{input.presets.subscription.hint}}</span></button>
+      </div>
+      <div class="custom-input">
+        <label class="field">
+          <span>{{input.customAmountLabel}}</span>
+          <input type="number" id="custom-amount" min="0" step="0.01" inputmode="decimal" />
+        </label>
+        <label class="field">
+          <span>{{input.customPeriodicityLabel}}</span>
+          <select id="custom-periodicity">
+            <option value="daily">{{input.periodicityOptions.daily}}</option>
+            <option value="weekly">{{input.periodicityOptions.weekly}}</option>
+            <option value="monthly">{{input.periodicityOptions.monthly}}</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card card-slider" aria-label="{{slider.cardTitle}}">
+      <h2 class="card-title">{{slider.cardTitle}}</h2>
+      <input type="range" id="start-slider" class="slider" min="0" max="0" value="0" disabled aria-label="{{slider.ariaLabel}}" />
+      <p class="slider-date" id="start-date-label">—</p>
+    </section>
+
+    <section class="card" aria-label="{{curve.ariaLabel}}">
+      <div class="curve-wrap">
+        <svg id="curve-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+          <line id="curve-zero" x1="0" y1="150" x2="1000" y2="150" class="curve-zero-line" />
+          <path id="curve-path" class="curve-path" d="" />
+          <circle id="curve-marker" class="curve-marker" cx="0" cy="150" r="6" />
+        </svg>
+        <div class="curve-axis" id="curve-axis" aria-hidden="true"></div>
+        <p class="curve-caption">{{curve.caption}}</p>
+      </div>
+      <p class="extreme" id="best-moment">{{curve.bestPlaceholder}}</p>
+      <p class="extreme" id="worst-moment">{{curve.worstPlaceholder}}</p>
+    </section>
+
+    <section class="card" aria-label="{{result.ariaLabel}}">
+      <p class="result-line">
+        <span class="result-label">{{result.spent}}</span>
+        <span class="result-money" id="result-spent">—</span>
+      </p>
+      <p class="result-line">
+        <span class="result-label">{{result.becomes}}</span>
+        <span class="result-money" id="result-value">—</span>
+      </p>
+      <p class="result-line result-diff">
+        <span class="result-label">{{result.diff}}</span>
+        <span class="result-money" id="result-diff-usd">—</span>
+      </p>
+      <p class="result-pct" id="result-diff-pct">—</p>
+      <p class="joke" id="result-joke"></p>
+      <p class="note" id="monthly-note" hidden>{{result.monthlyNote}}</p>
+      <p class="note">{{result.noFeesNote}}</p>
+      <p class="note">{{result.priceSourceNote}}</p>
+    </section>
+
+    <section class="card" aria-label="{{cardSection.title}}">
+      <button type="button" class="button-primary" id="card-button">{{cardSection.saveButton}}</button>
+      <img id="card-preview" class="card-preview" alt="{{cardSection.title}}" hidden />
+      <div class="card-actions">
+        <button type="button" class="button-secondary" id="card-share" hidden>{{cardSection.shareButton}}</button>
+        <a class="button-secondary" id="card-download" download="btc-what-if.png" hidden>{{cardSection.downloadButton}}</a>
+      </div>
+    </section>
+
+    <section class="about">
+      <h2>{{about.title}}</h2>
+      <p>{{about.p1}}</p>
+      <p>{{about.p2}}</p>
+      <p>{{about.p3}}</p>
+    </section>
+
+    <p class="loading-note" id="loading-note">{{loading.loading}}</p>
+  </main>
+
+  <footer class="footer">
+    <p class="note" id="as-of-note">—</p>
+    <p class="note" id="donate-note"></p>
+  </footer>
+
+  <script src="{{base}}src/strings.js"></script>
+  <script src="{{base}}src/date-utils.js"></script>
+  <script src="{{base}}src/dca.js"></script>
+  <script src="{{base}}src/app.js"></script>
+  <script src="{{base}}src/card.js"></script>
+</body>
+</html>

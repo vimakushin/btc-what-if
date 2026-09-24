@@ -399,6 +399,23 @@ body {
   gap: 8px;
 }
 
+.about {
+  margin: 8px 0 16px;
+}
+
+.about h2 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.about p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+}
+
 .footer {
   margin-top: 8px;
 }

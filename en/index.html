@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What if I'd bought Bitcoin?</title>
+  <meta name="description" content="Turns your everyday spending into what it would be worth in Bitcoin. Honestly shows that a different start date could just as easily mean a loss." />
+  <link rel="canonical" href="https://vimakushin.github.io/btc-what-if/en/" />
+  <link rel="alternate" hreflang="ru" href="https://vimakushin.github.io/btc-what-if/" />
+  <link rel="alternate" hreflang="en" href="https://vimakushin.github.io/btc-what-if/en/" />
+  <link rel="alternate" hreflang="x-default" href="https://vimakushin.github.io/btc-what-if/" />
+  <link rel="stylesheet" href="../src/style.css" />
+</head>
+<body>
+  <header class="header">
+    <p class="lang-switch-wrap"><a href="../?lang=ru" class="lang-switch">RU</a></p>
+    <h1>What if I'd bought Bitcoin?</h1>
+    <p class="lead">Pick a habit and drag the start date. You'll see the flashy number, and what it actually cost to get it.</p>
+  </header>
+
+  <main>
+    <section class="card" aria-label="What's going into Bitcoin">
+      <h2 class="card-title">What's going into Bitcoin</h2>
+      <div class="presets">
+        <button type="button" class="preset" data-preset="coffee"><span>Coffee</span><span class="preset-hint">$5 a day</span></button>
+        <button type="button" class="preset" data-preset="cigarettes"><span>Cigarettes</span><span class="preset-hint">$8 a day</span></button>
+        <button type="button" class="preset" data-preset="meals"><span>Lunch</span><span class="preset-hint">$12 a day</span></button>
+        <button type="button" class="preset" data-preset="subscription"><span>Subscription</span><span class="preset-hint">$15 a month</span></button>
+      </div>
+      <div class="custom-input">
+        <label class="field">
+          <span>Your own amount, $</span>
+          <input type="number" id="custom-amount" min="0" step="0.01" inputmode="decimal" />
+        </label>
+        <label class="field">
+          <span>How often</span>
+          <select id="custom-periodicity">
+            <option value="daily">every day</option>
+            <option value="weekly">once a week</option>
+            <option value="monthly">once a month</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card card-slider" aria-label="When we're starting">
+      <h2 class="card-title">When we're starting</h2>
+      <input type="range" id="start-slider" class="slider" min="0" max="0" value="0" disabled aria-label="Purchase start date" />
+      <p class="slider-date" id="start-date-label">—</p>
+    </section>
+
+    <section class="card" aria-label="Result curve across every possible start date">
+      <div class="curve-wrap">
+        <svg id="curve-svg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+          <line id="curve-zero" x1="0" y1="150" x2="1000" y2="150" class="curve-zero-line" />
+          <path id="curve-path" class="curve-path" d="" />
+          <circle id="curve-marker" class="curve-marker" cx="0" cy="150" r="6" />
+        </svg>
+        <div class="curve-axis" id="curve-axis" aria-hidden="true"></div>
+        <p class="curve-caption">This shape isn't a direct percent scale. Otherwise, the last few years' drop would hide behind the 2010 spike. Exact numbers are at the slider and in the result below.</p>
+      </div>
+      <p class="extreme" id="best-moment">Best moment: —</p>
+      <p class="extreme" id="worst-moment">Worst moment: —</p>
+    </section>
+
+    <section class="card" aria-label="Result">
+      <p class="result-line">
+        <span class="result-label">Spent</span>
+        <span class="result-money" id="result-spent">—</span>
+      </p>
+      <p class="result-line">
+        <span class="result-label">Would be worth</span>
+        <span class="result-money" id="result-value">—</span>
+      </p>
+      <p class="result-line result-diff">
+        <span class="result-label">Difference</span>
+        <span class="result-money" id="result-diff-usd">—</span>
+      </p>
+      <p class="result-pct" id="result-diff-pct">—</p>
+      <p class="joke" id="result-joke"></p>
+      <p class="note" id="monthly-note" hidden>Not every month has the day you picked. In short months, the purchase moves to the last day of that month.</p>
+      <p class="note">Calculated strictly on schedule, no fees or taxes.</p>
+      <p class="note">Price is averaged across several major exchanges. A specific exchange could show a slightly different number.</p>
+    </section>
+
+    <section class="card" aria-label="Share the result">
+      <button type="button" class="button-primary" id="card-button">Share your result</button>
+      <img id="card-preview" class="card-preview" alt="Share the result" hidden />
+      <div class="card-actions">
+        <button type="button" class="button-secondary" id="card-share" hidden>Share</button>
+        <a class="button-secondary" id="card-download" download="btc-what-if.png" hidden>Download</a>
+      </div>
+    </section>
+
+    <section class="about">
+      <h2>What this actually calculates</h2>
+      <p>Ever wondered what if I had bought Bitcoin? This tool answers it the way most people would actually have done it: a little at a time, on a schedule. Pick a small amount (coffee, cigarettes, a subscription, or your own number) and a rhythm: daily, weekly or monthly. It then runs that habit through real daily BTC/USD prices going back to 2010. The strategy is known as dollar-cost averaging, or DCA.</p>
+      <p>The start-date slider matters most. Keep the amount and the schedule exactly the same, change only the day you begin, and the outcome can swing from a huge gain to a loss. The curve shows every start date at once. Same choice, very different endings, and the difference is mostly when you happened to begin, not how well anyone saw it coming.</p>
+      <p>A few honest limits. No fees, no taxes. Prices are averaged across several exchanges, and a day runs on UTC. And the past says nothing about what comes next. This is arithmetic on history, not a hint about what to do.</p>
+    </section>
+
+    <p class="loading-note" id="loading-note">Loading price history…</p>
+  </main>
+
+  <footer class="footer">
+    <p class="note" id="as-of-note">—</p>
+    <p class="note" id="donate-note"></p>
+  </footer>
+
+  <script src="../src/strings.js"></script>
+  <script src="../src/date-utils.js"></script>
+  <script src="../src/dca.js"></script>
+  <script src="../src/app.js"></script>
+  <script src="../src/card.js"></script>
+</body>
+</html>
