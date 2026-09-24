@@ -403,11 +403,12 @@ body {
   margin: 8px 0 16px;
 }
 
-.about h2 {
+.about summary {
   font-size: 1rem;
-  margin: 0 0 8px;
   color: var(--muted);
   font-weight: 600;
+  cursor: pointer;
+  padding: 12px 0;
 }
 
 .about p {

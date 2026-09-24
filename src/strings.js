@@ -105,7 +105,7 @@
         error: "Не получилось загрузить историю цен. Обнови страницу.",
       },
       about: {
-        title: "Что здесь считается",
+        summary: "Откуда берутся эти цифры",
         p1: "Калькулятор отвечает на вопрос «а если бы я купил биткоин», но не разово, а так, как обычно и бывает: понемногу и регулярно. Берётся небольшая сумма (кофе, сигареты, подписка или своя) и шаг: каждый день, неделю или месяц. Дальше она прогоняется по реальным дневным ценам BTC/USD с 2010 года. Такая стратегия называется регулярной покупкой, по-английски dollar-cost averaging, или DCA.",
         p2: "Главное здесь ползунок даты начала. Одно и то же решение, с той же суммой и тем же шагом, при разных датах старта заканчивается где-то огромным плюсом, а где-то минусом. Кривая показывает это сразу по всем датам. Так что результат зависит не столько от решения, сколько от того, когда ты начал. Это про везение с календарём, а не про чью-то прозорливость.",
         p3: "Допущения простые. Комиссий и налогов нет. Цены усреднены по нескольким биржам, сутки считаются по UTC. И главное: то, что было в прошлом, ничего не говорит о будущем. Это арифметика по истории, а не подсказка, что делать.",
@@ -199,7 +199,7 @@
         error: "Couldn't load the price history. Refresh the page.",
       },
       about: {
-        title: "What this actually calculates",
+        summary: "Where these numbers come from",
         p1: "Ever wondered what if I had bought Bitcoin? This tool answers it the way most people would actually have done it: a little at a time, on a schedule. Pick a small amount (coffee, cigarettes, a subscription, or your own number) and a rhythm: daily, weekly or monthly. It then runs that habit through real daily BTC/USD prices going back to 2010. The strategy is known as dollar-cost averaging, or DCA.",
         p2: "The start-date slider matters most. Keep the amount and the schedule exactly the same, change only the day you begin, and the outcome can swing from a huge gain to a loss. The curve shows every start date at once. Same choice, very different endings, and the difference is mostly when you happened to begin, not how well anyone saw it coming.",
         p3: "A few honest limits. No fees, no taxes. Prices are averaged across several exchanges, and a day runs on UTC. And the past says nothing about what comes next. This is arithmetic on history, not a hint about what to do.",
