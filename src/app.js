@@ -35,11 +35,14 @@
     subscription: { amount: 15, periodicity: "monthly" },
   };
 
-  // Единственное место в коде, где записан адрес доната — обе языковые
-  // строки footer.donate собираются подстановкой в шаблон отсюда, а не
-  // хранят свою копию адреса, чтобы его не пришлось сверять на совпадение
-  // в нескольких местах.
-  const DONATE_ADDRESS = "0xf65e04f7b5761b6bdc42726a54ee467736d0ca74";
+  // Единственное место в коде, где записан адрес доната: в строках
+  // footer.* его нет, чтобы не сверять копии на совпадение.
+  // Заглавные буквы расставлены по контрольной сумме ERC-55: при опечатке
+  // в любом знаке набор заглавных перестанет сходиться, и кошелёк это
+  // заметит (в нижнем регистре такой защиты нет). Сумму посчитал владелец
+  // 7 октября 2026 и независимо перепроверил; оба расчёта сверены с
+  // эталонными адресами из текста стандарта.
+  const DONATE_ADDRESS = "0xF65e04f7b5761b6BDc42726A54eE467736D0ca74";
 
   const el = {
     presetButtons: Array.from(document.querySelectorAll(".preset")),
@@ -60,7 +63,7 @@
     joke: document.getElementById("result-joke"),
     monthlyNote: document.getElementById("monthly-note"),
     asOfNote: document.getElementById("as-of-note"),
-    donateNote: document.getElementById("donate-note"),
+    donateAddress: document.getElementById("donate-address"),
     loadingNote: document.getElementById("loading-note"),
     cardButton: document.getElementById("card-button"),
     cardPreview: document.getElementById("card-preview"),
@@ -475,7 +478,7 @@
   async function init() {
     // Не зависит от цен, поэтому не ждёт fetch: показывается, даже если
     // загрузка истории цен не удалась.
-    el.donateNote.textContent = window.i18n.formatTemplate(STR.footer.donate, { address: DONATE_ADDRESS });
+    el.donateAddress.textContent = DONATE_ADDRESS;
     setLoading(true, false);
     let data;
     try {

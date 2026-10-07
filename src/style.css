@@ -420,3 +420,18 @@ body {
 .footer {
   margin-top: 8px;
 }
+
+.donate {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.donate-address {
+  color: var(--fg);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.8rem;
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
