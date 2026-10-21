@@ -17,3 +17,7 @@ Recurring-Bitcoin-purchase calculators already exist, run by exchanges and Bitco
 ## Where the prices come from
 
 Daily BTC/USD prices from [blockchain.info](https://www.blockchain.info/charts/market-price), stored in a plain JSON file next to the page. No live API calls from your browser, no tracking, no accounts. The file updates itself once a day via GitHub Actions.
+
+## License
+
+[MIT](LICENSE)

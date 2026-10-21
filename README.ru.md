@@ -17,3 +17,7 @@
 ## Откуда цены
 
 Дневные цены BTC/USD с [blockchain.info](https://www.blockchain.info/charts/market-price), в простом JSON-файле рядом со страницей. Без обращений к чужим API из браузера, без слежки, без регистрации. Файл обновляется сам раз в сутки через GitHub Actions.
+
+## Лицензия
+
+[MIT](LICENSE)
