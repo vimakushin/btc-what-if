@@ -4,6 +4,8 @@
 
 *Русская версия: [README.ru.md](README.ru.md)*
 
+![Phone-width screenshot of the app. The Coffee preset ($5 a day) is selected and the start date is set to October 15, 2021. A chart shows how the outcome changes with the start date, with the best and worst start dates listed under it. Below that: the amount spent, what it would be worth today, and the difference.](docs/screenshot.png)
+
 A page that tests the daydream everyone has had: "what if I'd put that money into Bitcoin instead?"
 
 Pick a habit (coffee, cigarettes, a subscription, or your own amount) and see what it would be worth today. Then drag the start date and watch the same decision turn into +600% or -40%, depending only on the day you picked.
@@ -17,6 +19,10 @@ Recurring-Bitcoin-purchase calculators already exist, run by exchanges and Bitco
 ## Where the prices come from
 
 Daily BTC/USD prices from [blockchain.info](https://www.blockchain.info/charts/market-price), stored in a plain JSON file next to the page. No live API calls from your browser, no tracking, no accounts. The file updates itself once a day via GitHub Actions.
+
+## Code comments
+
+Comments in the code are written in Russian.
 
 ## License
 
